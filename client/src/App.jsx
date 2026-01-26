@@ -1,9 +1,14 @@
-import React from 'react'
+import { Toaster } from "sonner";
+import RootRouter from "./router/RootRouter";
 
 function App() {
+  // console.log(import.meta.env.VITE_API_URL)
   return (
-    <div className='bg-red-600'>App</div>
-  )
+    <>
+      <Toaster position="top-center" richColors="true" visibleToasts={3} />
+      <RootRouter />
+    </>
+  );
 }
 
-export default App
+export default App;
