@@ -12,12 +12,14 @@ function useVideoProcess() {
 
     try {
       const response = await processVideoAPI(formData);
-      console.log(response);
+      // console.log(response);
 
       // IF RESPONSE IF A TEXT
       if (response.status !== 200) {
         const text = await response.data.text();
         const jsonRes = JSON.parse(text);
+
+        // console.log("Text response: ", jsonRes)
 
         return {
           success: false,
@@ -36,7 +38,7 @@ function useVideoProcess() {
       console.log("[useVIDPROCESS error:] ", error);
       return {
         success: false,
-        message: "Unexpected client error",
+        message: error?.message,
       };
     } finally {
       setLoading(false);
