@@ -1,0 +1,119 @@
+
+---
+
+# `NOTES.txt` (Interview + Revision Notes)
+
+This is **for your brain**, not GitHub.
+
+```txt
+VideoStack – Phase 1 Notes (Interview Ready)
+
+CORE IDEA
+---------
+Dockerized Node.js backend that uses FFmpeg to process media files.
+Stateless architecture, no database, file-based processing.
+
+WHY THIS PROJECT
+----------------
+Most freshers build CRUD apps.
+This project demonstrates:
+- System-level tooling (FFmpeg)
+- Async process handling
+- Docker fundamentals
+- Production thinking
+
+KEY FEATURES
+------------
+- Video resize (240p–1080p)
+- Audio extraction
+- Format conversion
+- Stateless API
+- Dockerized backend
+
+IMPORTANT CONCEPTS
+------------------
+
+1. Container vs Codec
+- Container: mp4, mkv
+- Codec: h264, aac, mp3
+- Changing container ≠ re-encoding
+
+2. FFmpeg Rules
+- If video frames change → must re-encode video
+- If audio unchanged → copy audio
+- `-c` stands for codec
+- `-c:v` video codec
+- `-c:a` audio codec
+
+3. Example Commands
+- Remux:
+  ffmpeg -i input.mp4 -c copy output.mkv
+
+- Resize:
+  ffmpeg -i input.mp4 -vf scale=-2:240 -c:v libx264 -c:a copy output.mp4
+
+4. spawn vs exec
+- spawn = streaming, non-blocking (used)
+- exec = buffered, memory heavy (avoided)
+
+5. Stateless Architecture
+- No database
+- No server-side sessions
+- Each request is independent
+- Easy to scale horizontally
+
+DOCKER CONCEPTS
+---------------
+- Image = blueprint
+- Container = running instance
+- `-t` tags images
+- `--name` names containers
+- `.dockerignore` controls build context, not runtime
+
+Why node_modules exists in container:
+- Ignored from host
+- Created via npm install inside image
+
+ENV VARIABLES
+-------------
+- `.env` is not copied into image
+- Injected at runtime using `--env-file`
+- Prevents secrets from leaking
+
+WHY node:XX-slim
+----------------
+- Smaller image
+- Less attack surface
+- Faster pulls
+- Debian-based (FFmpeg friendly)
+
+IMAGE SIZE CONFUSION
+-------------------
+- Docker Hub size = compressed
+- Disk usage = Docker bookkeeping
+- Content size = actual image layers
+- Users never download Docker images
+
+INTERVIEW ONE-LINERS
+-------------------
+"I built a Dockerized Node.js backend that uses FFmpeg for stateless media processing."
+
+"I used child_process.spawn to safely execute FFmpeg without blocking the event loop."
+
+"I separated configuration from the image using runtime environment variables."
+
+"I used Docker slim images to reduce size and attack surface."
+
+VERSIONING
+----------
+v1.0.0 → Dockerized backend
+Future:
+v1.1.0 → HLS playlists
+v2.0.0 → Cloud storage + streaming
+
+WHAT THIS PROJECT SHOWS
+-----------------------
+- Backend fundamentals
+- Media processing understanding
+- Docker & infra basics
+- Production mindset
