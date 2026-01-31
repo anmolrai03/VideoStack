@@ -1,11 +1,21 @@
 import app from "./app.js";
+import connectDb from "./configs/db.js";
 
-app.on('error' , (err) => {
-  console.log("Server Error logs: " , err);
-})
+connectDb()
+  .then(() => {
 
-const port = process.env.PORT || 3000;
+    app.on("error", (err) => {
+      console.log("Server Error logs: ", err);
+    });
 
-app.listen(port , () => {
-  console.log(`Server running on http://localhost:${port}`);
-})
+    const port = process.env.PORT || 3000;
+
+    app.listen(port, () => {
+      console.log(`Server running on http://localhost:${port}`);
+    });
+
+  })
+  .catch((err) => {
+    console.log("[Mongodb connection failed!! See logs] ", err);
+    process.exit(1);
+  });
