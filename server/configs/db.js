@@ -2,7 +2,9 @@ import mongoose from "mongoose";
 
 async function connectDb(){
   try {
-    await mongoose.connect(process.env.MONGODB_URL);
+    await mongoose.connect(process.env.MONGODB_URL,{
+      autoIndex: false
+    });
     console.log("MongoDb connected!!")
     // console.log(mongoose.connection.host);
   } catch (error) {
