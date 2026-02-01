@@ -7,7 +7,7 @@ import cookieParser from 'cookie-parser';
 // IMPORT ROUTES STARTS HERE
 import videoProcessingRoute from "./routes/videoProcessing.route.js"
 import authRoute from "./routes/auth.route.js"
-import errorHandler from './middlewares/errorhandler.middleware.js';
+import errorHandler from './middlewares/errorHandler.middleware.js';
 import allowedOrigins from './constants/appCORS.js';
 
 // CONFIGURE DOTENV STARTS HERE
