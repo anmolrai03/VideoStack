@@ -1,7 +1,7 @@
 import { jwtVerify } from "../services/jwt/jwtServices";
 import AppError from "../utils/AppError";
 
-import {DEV_ENV} from "../constants/nodeEnv.js"
+import debugLog from "../utils/debugLog.js";
 
 const authMiddleware = (req , res, next) => {
   try {
@@ -17,9 +17,7 @@ const authMiddleware = (req , res, next) => {
 
     const decodedData = jwtVerify(token);
 
-    if( process.env.NODE_ENV === DEV_ENV) {
-      console.log("From auth middleware", decodedData);
-    }
+    debugLog("From auth middleware", decodedData);
 
     req.userId = decodedData.sub;
     req.clientData = {
