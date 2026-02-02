@@ -21,10 +21,9 @@ const authMiddleware = (req , res, next) => {
 
     debugLog("From auth middleware", decodedData);
 
-    req.userId = decodedData.sub;
     req.clientData = {
-      email: decodedData?.email,
-      username: decodedData?.username
+      userId: decodedData.sub,
+      fullname: decodedData?.fullname,
     };
 
     next();
