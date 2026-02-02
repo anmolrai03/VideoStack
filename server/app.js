@@ -8,7 +8,9 @@ import cookieParser from 'cookie-parser';
 import videoProcessingRoute from "./routes/videoProcessing.route.js"
 import authRoute from "./routes/auth.route.js"
 import errorHandler from './middlewares/errorHandler.middleware.js';
-import allowedOrigins from './constants/appCORS.js';
+
+//IMPORT CONSTANTS STARTS HERE
+import getAllowedOrigins from './constants/appCORS.js';
 
 // CONFIGURE DOTENV STARTS HERE
 dotenv.config({
@@ -19,6 +21,7 @@ dotenv.config({
 const app = express();
 
 // CORS SETTING
+const allowedOrigins = getAllowedOrigins();
 app.use(
   cors(
     {
