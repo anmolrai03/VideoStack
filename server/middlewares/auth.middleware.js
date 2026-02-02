@@ -1,7 +1,9 @@
 import { jwtVerify } from "../services/jwt/jwtServices";
-import AppError from "../utils/AppError";
 
+import AppError from "../utils/AppError";
 import debugLog from "../utils/debugLog.js";
+
+import {statusCodes} from "../constants/statusCodes.js"
 
 const authMiddleware = (req , res, next) => {
   try {
@@ -9,7 +11,7 @@ const authMiddleware = (req , res, next) => {
 
     if( !token ){
       throw new AppError({
-        statusCode: 401,
+        statusCode: statusCodes.BAD_REQUEST,
         code: "MISSING_TOKEN",
         message: "Access Token is required."
       })

@@ -1,13 +1,15 @@
 import jwt from "jsonwebtoken";
 
 import { JWT_AUDIENCE, JWT_ISSUER, JWT_EXPIRES } from "../../constants/jwt.js";
+import {statusCodes} from '../../constants/statusCodes.js'
+
 import AppError from "../../utils/AppError.js";
 
 const JWT_SECRET = process.env.JWT_SECRET_KEY;
 
 if (!JWT_SECRET) {
   throw new AppError({
-    statusCode: 500,
+    statusCode: statusCodes.INTERNAL_SERVER_ERROR,
     code: "MISSING_AUTH_KEY",
     message: "Missing key for auth in jwt",
   });
@@ -17,7 +19,7 @@ const jwtSign = (payload, id) => {
 
   if( payload == null ) {
     throw new AppError({
-      statusCode: 500,
+      statusCode: statusCodes.INTERNAL_SERVER_ERROR,
       code: "MISSING_PAYLOAD",
       message: "missing data to be used to sign the token",
     });
@@ -36,7 +38,7 @@ const jwtSign = (payload, id) => {
   } catch (error) {
     console.log("[Error occured in jwtServices.]: ", error);
     throw new AppError({
-      statusCode: 500,
+      statusCode: statusCodes.INTERNAL_SERVER_ERROR,
       code: "JWT_ERROR",
       message: "Error in JWT token production."
     })
@@ -46,7 +48,7 @@ const jwtSign = (payload, id) => {
 const jwtVerify = (clientToken) => {
   if( !clientToken ) {
     throw new AppError({
-      statusCode: 401,
+      statusCode: statusCodes.UNAUTHORIZED,
       code: "CLIENT_TOKEN_MISSING",
       message: 'Authentication token is required.'
     })
@@ -63,7 +65,7 @@ const jwtVerify = (clientToken) => {
   } catch (error) {
     console.error("[Error in jwt verification]: ", error);
     throw new AppError({
-      statusCode: 401,
+      statusCode: statusCodes.UNAUTHORIZED,
       code:"INVALID_TOKEN",
       message: "Token verification error."
     })
