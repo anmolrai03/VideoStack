@@ -8,7 +8,7 @@ async function connectDb(){
     console.log("MongoDb connected!!")
     // console.log(mongoose.connection.host);
   } catch (error) {
-    console.log("[MongoDB connection error]: ", error);
+    console.log("[MongoDB connection error]: ", error.message);
     throw error;
   }
 }
