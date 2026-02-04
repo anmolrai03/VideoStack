@@ -1,4 +1,4 @@
-import { DEV_ENV } from "../constants/nodeEnv"
+import { DEV_ENV } from "../constants/nodeEnv.js"
 
 /*
   - USED FOR DEBUGGING 

@@ -1,6 +1,6 @@
-import AppError from "../utils/AppError";
+import AppError from "../utils/AppError.js";
 
-import { statusCodes } from "./statusCodes";
+import { statusCodes } from "./statusCodes.js";
 
 function getAllowedOrigins() {
   const origins = process.env.CORS_ORIGIN;

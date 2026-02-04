@@ -1,6 +1,6 @@
-import { jwtVerify } from "../services/jwt/jwtServices";
+import { jwtVerify } from "../services/jwt/jwtServices.js";
 
-import AppError from "../utils/AppError";
+import AppError from "../utils/AppError.js";
 import debugLog from "../utils/debugLog.js";
 
 import {statusCodes} from "../constants/statusCodes.js"
