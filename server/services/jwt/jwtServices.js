@@ -5,15 +5,21 @@ import {statusCodes} from '../../constants/statusCodes.js'
 
 import AppError from "../../utils/AppError.js";
 
-const JWT_SECRET = process.env.JWT_SECRET_KEY;
 
-if (!JWT_SECRET) {
-  throw new AppError({
-    statusCode: statusCodes.INTERNAL_SERVER_ERROR,
-    code: "MISSING_AUTH_KEY",
-    message: "Missing key for auth in jwt",
-  });
+const getJwtSecret = () => {
+  const JWT_SECRET = process.env.JWT_SECRET_KEY;
+
+  if (!JWT_SECRET) {
+    throw new AppError({
+      statusCode: statusCodes.INTERNAL_SERVER_ERROR,
+      code: "MISSING_AUTH_KEY",
+      message: "Missing key for auth in jwt",
+    });
+  }
+
+  return JWT_SECRET;
 }
+
 
 const jwtSign = (payload, id) => {
 
@@ -26,6 +32,7 @@ const jwtSign = (payload, id) => {
   }
 
   try {
+    const JWT_SECRET = getJwtSecret();
     const token = jwt.sign(payload, JWT_SECRET, {
       subject: id.toString(),
       issuer: JWT_ISSUER,
@@ -55,6 +62,7 @@ const jwtVerify = (clientToken) => {
   }
 
   try {
+    const JWT_SECRET = getJwtSecret();
     const decoded = jwt.verify(clientToken, JWT_SECRET, {
       issuer: JWT_ISSUER,
       audience: JWT_AUDIENCE,
