@@ -1,4 +1,4 @@
-import {describe , it , expect , vi, beforeEach, afterEach} from "vitest";
+import {describe , it , expect , vi, beforeEach} from "vitest";
 
 import authMiddleware from "../../middlewares/auth.middleware.js";
 import { jwtVerify } from "../../services/jwt/jwtServices";
