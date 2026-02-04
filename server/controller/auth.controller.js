@@ -179,7 +179,7 @@ const logoutController = async (req, res, next) => {
   try {
     // GETTING FROM AUTHMIDDLEWARE
     const { userId, fullname } = req.clientData;
-    debugLog("logout controller", { userId, clientData });
+    debugLog("logout controller", req.clientData);
 
     // CHECK IF USERID IS NOT NULL
     if (!userId) {
@@ -224,7 +224,7 @@ const verifyPasswordController = async (req, res, next) => {
     }
 
     // SEARCH FOR USER
-    const currUser = await User.findOne({ _id: userId }.select("+password"));
+    const currUser = await User.findOne({ _id: userId }).select("+password");
     if (!currUser) {
       throw new AppError({
         statusCode: statusCodes.NOT_FOUND,
