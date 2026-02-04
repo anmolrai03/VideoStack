@@ -1,56 +1,57 @@
 // IMPORT MODULES STARTS HERE
-import express from 'express';
-import dotenv from 'dotenv';
-import cors from 'cors';
-import cookieParser from 'cookie-parser';
+import express from "express";
+import dotenv from "dotenv";
+import cors from "cors";
+import cookieParser from "cookie-parser";
 
 // IMPORT ROUTES STARTS HERE
-import videoProcessingRoute from "./routes/videoProcessing.route.js"
-import authRoute from "./routes/auth.route.js"
-import errorHandler from './middlewares/errorHandler.middleware.js';
+import videoProcessingRoute from "./routes/videoProcessing.route.js";
+import authRoute from "./routes/auth.route.js";
+import errorHandler from "./middlewares/errorHandler.middleware.js";
 
 //IMPORT CONSTANTS STARTS HERE
-import getAllowedOrigins from './constants/appCORS.js';
+import getAllowedOrigins from "./constants/appCORS.js";
 
 // CONFIGURE DOTENV STARTS HERE
 dotenv.config({
-  path: './.env'
+  path: "./.env",
 });
 
-// CREATE APP
-const app = express();
+function createApp() {
+  // CREATE APP
+  const app = express();
 
-// CORS SETTING
-const allowedOrigins = getAllowedOrigins();
-app.use(
-  cors(
-    {
+  // CORS SETTING
+  const allowedOrigins = getAllowedOrigins();
+  app.use(
+    cors({
       origin: allowedOrigins,
-      credentials: true
-    }
-  )
-)
+      credentials: true,
+    }),
+  );
 
-// SET JSON LIMIT
-app.use(express.json({limit: '16kb'}));
+  // SET JSON LIMIT
+  app.use(express.json({ limit: "16kb" }));
 
-// SET URL ENCODED LIMIT
-app.use(express.urlencoded({extended: true , limit: '16kb'}));
+  // SET URL ENCODED LIMIT
+  app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 
-// SET COOKIE PARSER
-app.use(cookieParser());
+  // SET COOKIE PARSER
+  app.use(cookieParser());
 
-// SET ROUTES
-app.use("/api", videoProcessingRoute);
-app.use("/api/auth", authRoute);
+  // SET ROUTES
+  app.use("/api", videoProcessingRoute);
+  app.use("/api/auth", authRoute);
 
+  // HEALTH CHECK ROUTE FOR PRODUCTION
+  app.get("/health", (req, res) => {
+    res.status(200).send("server active.");
+  });
 
-// HEALTH CHECK ROUTE FOR PRODUCTION
-app.get('/health' , (req , res) => {
-  res.status(200).send("server active.");
-});
+  // ERROR MIDDLEWARE
+  app.use(errorHandler);
 
-// ERROR MIDDLEWARE
-app.use(errorHandler);
+  return app;
+}
 
-export default app;
+export default createApp;
