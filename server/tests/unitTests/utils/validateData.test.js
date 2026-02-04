@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { checkEmail, checkPassword } from "../../utils/validateData.js";
+import { checkEmail, checkPassword } from "../../../utils/validateData.js";
 
 describe("checkPassword", () => {
   it("fails if password is missing", () => {

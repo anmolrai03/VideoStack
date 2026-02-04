@@ -1,12 +1,12 @@
 import {beforeEach, describe, expect, it, vi} from "vitest";
 
-import errorHandler from "../../middlewares/errorHandler.middleware.js";
-import { errorResponse } from "../../utils/responseHandler.js";
-import AppError from "../../utils/AppError";
-import { statusCodes } from "../../constants/statusCodes";
+import errorHandler from "../../../middlewares/errorHandler.middleware.js";
+import { errorResponse } from "../../../utils/responseHandler.js";
+import AppError from "../../../utils/AppError.js";
+import { statusCodes } from "../../../constants/statusCodes.js";
 
 vi.mock(
-  "../../utils/responseHandler.js" , 
+  "../../../utils/responseHandler.js" , 
   () => ({errorResponse: vi.fn()})
 );
 

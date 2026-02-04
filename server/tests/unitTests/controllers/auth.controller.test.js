@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, vi } from "vitest";
 
-import { statusCodes } from "../../constants/statusCodes.js";
+import { statusCodes } from "../../../constants/statusCodes.js";
 
-import User from "../../models/users.model.js";
+import User from "../../../models/users.model.js";
 
-import { successResponse } from "../../utils/responseHandler.js";
-import { checkEmail, checkPassword } from "../../utils/validateData.js";
-import AppError from "../../utils/AppError.js";
+import { successResponse } from "../../../utils/responseHandler.js";
+import { checkEmail, checkPassword } from "../../../utils/validateData.js";
+import AppError from "../../../utils/AppError.js";
 
 import {
   loginController,
@@ -14,10 +14,10 @@ import {
   logoutController,
   verifyPasswordController,
   getUserDetailsController,
-} from "../../controller/auth.controller.js";
+} from "../../../controller/auth.controller.js";
 
 // MOCKING MODULES
-vi.mock("../../models/users.model.js", () => {
+vi.mock("../../../models/users.model.js", () => {
   const MockUser = vi.fn();
   MockUser.findOne = vi.fn();
 
@@ -26,11 +26,11 @@ vi.mock("../../models/users.model.js", () => {
   };
 });
 
-vi.mock("../../utils/responseHandler.js", () => ({
+vi.mock("../../../utils/responseHandler.js", () => ({
   successResponse: vi.fn(),
 }));
 
-vi.mock("../../utils/validateData.js", () => ({
+vi.mock("../../../utils/validateData.js", () => ({
   checkEmail: vi.fn(),
   checkPassword: vi.fn(),
 }));

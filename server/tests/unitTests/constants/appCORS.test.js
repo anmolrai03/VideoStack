@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 
-import getAllowedOrigins from "../../constants/appCORS.js";
+import getAllowedOrigins from "../../../constants/appCORS.js";
 
 describe("testing getAllowedOrigins()", () => {
   beforeEach(() => {
