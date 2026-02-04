@@ -1,9 +1,11 @@
-import app from "./app.js";
+import createApp from "./app.js";
 import connectDb from "./configs/db.js";
 
 connectDb()
   .then(() => {
 
+    const app = createApp();
+    
     app.on("error", (err) => {
       console.log("Server Error logs: ", err);
     });
