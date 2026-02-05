@@ -19,7 +19,7 @@ const authMiddleware = (req , res, next) => {
 
     const decodedData = jwtVerify(token);
 
-    debugLog("From auth middleware", decodedData);
+    debugLog("From auth middleware", decodedData.sub);
 
     req.clientData = {
       userId: decodedData.sub,
