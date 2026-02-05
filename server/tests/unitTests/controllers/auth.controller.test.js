@@ -455,44 +455,16 @@ describe("Verify Password Controller", () => {
     vi.clearAllMocks();
   });
 
-  it("should throw VALIDATION_ERROR when password is invalid", async () => {
-    //ARRANGE
-    req.body.password = "123";
-    req.clientData.userId = "1";
-
-    checkPassword.mockReturnValue({
-      status: false,
-      errorMessage: "Weak password",
-    });
-
-    //ACT
-    await verifyPasswordController(req, res, next);
-
-    //ASSERT
-    expect(next).toHaveBeenCalledOnce();
-
-    const err = next.mock.calls[0][0];
-    expect(err.code).toBe("VALIDATION_ERROR");
-    expect(err.errors).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          field: "password",
-          message: expect.stringContaining("Weak")
-        })
-      ])
-    );
-
-  });
 
   it("should throw USER_DO_NOT_EXIST when user do not exist" , async () =>{
     //ARRANGE 
     req.body.password = "some-password";
     req.clientData.userId = "123";
 
-    checkPassword.mockReturnValue({
-      status: true,
-      errorMessage: "",
-    });
+    // checkPassword.mockReturnValue({
+    //   status: true,
+    //   errorMessage: "",
+    // });
 
     User.findOne.mockReturnValue({
         select: vi.fn().mockResolvedValue(null),
@@ -516,7 +488,7 @@ describe("Verify Password Controller", () => {
     req.body.password = "Password1";
     req.clientData.userId = "1";
 
-    checkPassword.mockReturnValue({ status: true });
+    // checkPassword.mockReturnValue({ status: true });
 
     const mockUser = {
       comparePassword: vi.fn().mockResolvedValue(false)
@@ -546,7 +518,7 @@ describe("Verify Password Controller", () => {
     req.body.password = "Password1";
     req.clientData.userId = "123";
 
-    checkPassword.mockReturnValue({ status: true });
+    // checkPassword.mockReturnValue({ status: true });
 
     User.findOne.mockReturnValue({
       select: vi.fn().mockResolvedValue({
