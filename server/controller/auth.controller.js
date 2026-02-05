@@ -227,15 +227,6 @@ const verifyPasswordController = async (req, res, next) => {
         errors: [{ field: "password", message: "Password field is missing." }],
       });
     }
-    // const validatePassword = checkPassword(password);
-    // if (!validatePassword.status) {
-    //   throw new AppError({
-    //     statusCode: statusCodes.BAD_REQUEST,
-    //     code: "VALIDATION_ERROR",
-    //     message: validatePassword.errorMessage,
-    //     errors: [{ field: "password", message: validatePassword.errorMessage }],
-    //   });
-    // }
 
     // SEARCH FOR USER
     const currUser = await User.findOne({ _id: userId }).select("+password");
