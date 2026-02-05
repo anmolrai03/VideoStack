@@ -429,7 +429,9 @@ describe("Logout Controller", () => {
     await logoutController(req, res, next);
 
     //ASSERT
-    expect(res.clearCookie).toHaveBeenCalledWith("accessToken");
+    expect(res.clearCookie).toHaveBeenCalledWith("accessToken",expect.objectContaining({
+      httpOnly: true
+    }));
     expect(successResponse).toHaveBeenCalledOnce();
     expect(successResponse).toHaveBeenCalledWith(
       res,
