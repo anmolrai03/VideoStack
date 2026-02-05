@@ -68,6 +68,7 @@ const loginController = async (req, res, next) => {
       httpOnly: true,
       sameSite: isProduction ? "none" : "lax",
       secure: isProduction,
+      maxAge: 24 * 60 *60 *1000
     });
 
     // SEND RESPONSE TO THE USER
@@ -135,7 +136,7 @@ const registerController = async (req, res, next) => {
 
     if (errors.length > 0) {
       throw new AppError({
-        statusCode: 400,
+        statusCode: statusCodes.BAD_REQUEST,
         code: "VALIDATION_ERROR",
         message: "Validation Failed",
         errors,
@@ -191,7 +192,12 @@ const logoutController = async (req, res, next) => {
     }
 
     // CLEAR COOKIES
-    res.clearCookie("accessToken");
+    const isProduction = process.env.NODE_ENV === PROD_ENV;
+    res.clearCookie("accessToken", {
+      httpOnly: true,
+      sameSite: isProduction ? "none" : "lax",
+      secure: isProduction,
+    });
 
     // RETURN MESSAGE
     return successResponse(
@@ -245,7 +251,7 @@ const verifyPasswordController = async (req, res, next) => {
     // RETURN RESPONSE.
     return successResponse(
       res,
-      statusCodes.NO_CONTENT,
+      statusCodes.OK,
       "PASSWORD_VERIFIED",
       "Password verified.",
     );
