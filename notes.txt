@@ -117,3 +117,252 @@ WHAT THIS PROJECT SHOWS
 - Media processing understanding
 - Docker & infra basics
 - Production mindset
+
+
+Upload → Multer → FFmpeg → HLS
+→ Backblaze B2 (object storage)
+→ CDN delivery
+→ Frontend player
+
+VIDEO PROCESSING PIPELINE NOTES (BullMQ + Redis + Worker)
+
+========================================================
+PROJECT GOAL
+============
+
+Move heavy video processing (FFmpeg → HLS → storage) out of the
+HTTP request lifecycle using background workers so the API remains
+fast and scalable.
+
+Instead of:
+Client → Upload → FFmpeg → Response
+
+We use:
+Client → Upload → Queue Job → Worker Processes Video
+
+This prevents timeouts and improves scalability.
+
+========================================================
+HIGH-LEVEL ARCHITECTURE
+=======================
+
+Client Upload
+↓
+Express API
+↓
+BullMQ Queue
+↓
+Redis (job store)
+↓
+Worker Process
+↓
+FFmpeg Processing
+↓
+Backblaze B2 Object Storage
+↓
+CDN / Player Streaming
+
+========================================================
+UPLOAD REQUEST FLOW
+===================
+
+POST /api/video
+
+Controller responsibilities:
+
+1. Multer saves uploaded video locally
+2. Create MongoDB video record
+3. Set status = PENDING
+4. Add job to BullMQ queue
+5. Return 202 Accepted response
+
+Example:
+
+await videoQueue.add("process-video", {
+videoId,
+inputPath,
+});
+
+========================================================
+WORKER PROCESS FLOW
+===================
+
+Worker runs as a separate Node process:
+
+node workers/video.worker.js
+
+Worker responsibilities:
+
+1. Update video status → PROCESSING
+2. Run FFmpeg conversion to HLS
+3. Upload HLS output to object storage
+4. Update status → READY
+5. Handle failures → FAILED
+
+Worker is NOT part of Express server.
+
+========================================================
+REDIS ROLE IN SYSTEM
+====================
+
+Redis stores job state:
+
+* pending jobs
+* processing jobs
+* retry jobs
+
+Redis is NOT a database.
+MongoDB is the source of truth.
+
+Redis = temporary job memory.
+
+========================================================
+REDIS ENVIRONMENT SETUP
+=======================
+
+Development (local Redis via Docker):
+
+REDIS_URL=redis://127.0.0.1:6379
+
+Run:
+docker run -p 6379:6379 redis
+
+Production (Upstash Redis):
+
+NODE_ENV=production
+REDIS_URL=rediss://default:password@host.upstash.io:6379
+
+TLS is required in production.
+
+========================================================
+REDIS CONNECTION PATTERN
+========================
+
+Singleton connection factory:
+
+getRedisConnection()
+
+Purpose:
+
+* prevent multiple connections
+* allow environment switching
+* avoid module side-effects
+
+Connection created when queue or worker requests it.
+
+========================================================
+BULLMQ QUEUE DESIGN
+===================
+
+Queue name:
+video-processing
+
+Job name:
+process-video
+
+Payload:
+videoId
+inputPath
+
+========================================================
+VIDEO STATUS LIFECYCLE
+======================
+
+PENDING → PROCESSING → READY
+↘ FAILED
+
+MongoDB stores video status.
+Redis does not.
+
+========================================================
+HLS PROCESSING FLOW
+===================
+
+Worker executes:
+
+processVideoToHLS(inputPath, outputDir)
+
+Output structure:
+
+processed/videoId/
+master.m3u8
+segments...
+
+========================================================
+OBJECT STORAGE FLOW (B2)
+========================
+
+Upload entire HLS folder to B2:
+
+videos/videoId/master.m3u8
+
+Store playlist URL in MongoDB:
+
+streamPlaylistUrl
+
+Frontend streams directly from CDN.
+Backend is not involved in streaming.
+
+========================================================
+DEV WORKFLOW
+============
+
+Start Redis:
+docker run -p 6379:6379 redis
+
+Start API:
+npm run dev
+
+Start Worker:
+npm run dev:workers
+
+Or:
+npm run dev:all
+
+========================================================
+IMPORTANT ARCHITECTURE RULES
+============================
+
+Never process video in controller.
+
+Redis is temporary storage.
+
+Worker is a separate process.
+
+MongoDB is the source of truth.
+
+CDN handles video streaming.
+
+Queue decouples API from heavy processing.
+
+========================================================
+CURRENT PROJECT STATE
+=====================
+
+Completed:
+
+* Redis connection module
+* BullMQ queue setup
+* Worker process
+* Environment-based Redis config
+* Concurrent dev scripts
+* Status model
+* Storage pipeline design
+
+Next steps:
+
+* FFmpeg integration
+* B2 upload integration
+* cleanup logic
+
+========================================================
+MENTAL MODEL
+============
+
+API = request handler
+Queue = task scheduler
+Worker = processor
+Redis = job memory
+Storage = delivery source
+
+This is the core background-job architecture.
