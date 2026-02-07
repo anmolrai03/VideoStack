@@ -9,14 +9,19 @@
   "scripts": {
     "test": "vitest",
     "dev": "nodemon server.js",
-    "start": "node server.js"
+    "dev:workers": "nodemon workers/index.js",
+    "start": "node server.js",
+    "start:workers": "node workers/index.js",
+    "docker-redis": "docker run -d -p 6379:6379 --name redis-dev redis:7"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
+    "bullmq": "^5.67.3",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
+    "ioredis": "^5.9.2",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.1.5",
     "multer": "^2.0.2"
