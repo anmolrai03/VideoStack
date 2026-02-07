@@ -7,10 +7,14 @@ import cookieParser from "cookie-parser";
 // IMPORT ROUTES STARTS HERE
 import videoProcessingRoute from "./routes/videoProcessing.route.js";
 import authRoute from "./routes/auth.route.js";
+import videosRoute from "./routes/videos.routes.js";
+
+//MIDDLEWARE IMPORTS STARTS HERE
 import errorHandler from "./middlewares/errorHandler.middleware.js";
 
 //IMPORT CONSTANTS STARTS HERE
 import getAllowedOrigins from "./constants/appCORS.js";
+import authMiddleware from "./middlewares/auth.middleware.js";
 
 // CONFIGURE DOTENV STARTS HERE
 dotenv.config({
@@ -42,6 +46,7 @@ function createApp() {
   // SET ROUTES
   app.use("/api", videoProcessingRoute);
   app.use("/api/auth", authRoute);
+  app.use("/api/videos",authMiddleware, videosRoute);
 
   // HEALTH CHECK ROUTE FOR PRODUCTION
   app.get("/health", (req, res) => {
