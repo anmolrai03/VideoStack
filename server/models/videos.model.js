@@ -22,11 +22,17 @@ const VideoSchema = new mongoose.Schema(
 
     streamPlaylistUrl: {
       type: String,
-      required: true
+      trim: true
     },
 
     thumbnail:{
       type: String,
+    },
+
+    status: {
+      type: String,
+      enum: ["QUEUED", "PROCESSING", "READY", "FAILED"],
+      default: "QUEUED",
     }
 
   }, {timestamps: true}
