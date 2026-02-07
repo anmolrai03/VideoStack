@@ -11,7 +11,7 @@ const authMiddleware = (req , res, next) => {
 
     if( !token ){
       throw new AppError({
-        statusCode: statusCodes.BAD_REQUEST,
+        statusCode: statusCodes.UNAUTHORIZED,
         code: "MISSING_TOKEN",
         message: "Access Token is required."
       })
@@ -29,6 +29,19 @@ const authMiddleware = (req , res, next) => {
     next();
 
   } catch (error) {
+    if (
+      error.name === "JsonWebTokenError" ||
+      error.name === "TokenExpiredError"
+    ) {
+      return next(
+        new AppError({
+          statusCode: statusCodes.UNAUTHORIZED,
+          code: "INVALID_TOKEN",
+          message: "Invalid or expired token.",
+        })
+      );
+    }
+
     next(error);
   }
 }
