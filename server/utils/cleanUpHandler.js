@@ -1,11 +1,14 @@
-import fs from 'node:fs/promises';
+import fs from "node:fs/promises";
 
-function cleanUpFiles(...paths){
-  for(const path of paths){
-    if( !path) continue;
-    fs.unlink(path).catch( (err) =>{
-      throw new Error("File Unlinking failed");
-    })
+async function cleanUpFiles(...paths) {
+  for (const path of paths) {
+    if (!path) continue;
+    try {
+      await fs.rm(path, { recursive: true, force: true });
+    } catch (err) {
+      console.error("Cleanup failed for:", path);
+      console.error(err.message);
+    }
   }
 }
 
