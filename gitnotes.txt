@@ -1,0 +1,93 @@
+# GIT BASICS CHEAT SHEET
+
+## BRANCHING
+
+Create a new branch and switch to it:
+git switch -c branch-name
+
+(Old way)
+git checkout -b branch-name
+
+Switch branch:
+git switch branch-name
+
+Switch to previous branch:
+git switch -
+
+List branches:
+git branch
+
+List all branches (local + remote):
+git branch -a
+
+## COMMITS
+
+Check status:
+git status
+
+Stage a file:
+git add file-name
+
+Stage everything:
+git add .
+
+Commit:
+git commit -m "message"
+
+Undo last commit (keep changes):
+git reset --soft HEAD~1
+
+## PUSH / PULL
+
+Push current branch:
+git push origin HEAD
+
+First push of a branch:
+git push -u origin branch-name
+
+Pull latest changes:
+git pull origin branch-name
+
+## MERGING
+
+Switch to target branch:
+git switch target-branch
+
+Merge feature branch:
+git merge feature-branch
+
+Delete merged branch:
+git branch -d feature-branch
+
+Delete remote branch:
+git push origin --delete feature-branch
+
+## LOGGING / HISTORY
+
+View commit graph:
+git log --oneline --graph --decorate --all
+
+See merged branches:
+git branch --merged
+
+See unmerged branches:
+git branch --no-merged
+
+## SAFE WORKFLOW (FEATURE DEVELOPMENT)
+
+1. git switch features/phase2_server
+2. git switch -c feature/video-worker
+3. do work
+4. git add .
+5. git commit -m "video worker"
+6. git push -u origin feature/video-worker
+7. git switch features/phase2_server
+8. git merge feature/video-worker
+9. git push origin features/phase2_server
+
+## MENTAL MODEL
+
+Branches are pointers to commits.
+They are NOT folders or hierarchies.
+
+main → integration branch → feature branch → merge back.
