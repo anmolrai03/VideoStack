@@ -1,20 +1,20 @@
-import {Queue} from "bullmq";
+import { Queue } from "bullmq";
 
-import getRedisConnection from "../configs/redis.js"
+import getRedisConnection from "../configs/redis.js";
 
-import queueNames from "../constants/queueNames.js"
+import queueNames from "../constants/queueNames.js";
 
-const videoQueue = new Queue(
-  queueNames.VIDEO_QUEUE,
-  {
-    connection: getRedisConnection(),
-    defaultJobOptions:{
-      attempts: 3,
-      removeOnComplete: true,
-      removeOnFail: false,
-      timeout: 30000
-    }
-  }
-);
+const videoQueue = new Queue(queueNames.VIDEO_QUEUE, {
+  connection: getRedisConnection(),
+  defaultJobOptions: {
+    attempts: 3,
+    removeOnComplete: true,
+    removeOnFail: false,
+    backoff: {
+      type: "exponential",
+      delay: 5000,
+    },
+  },
+});
 
 export default videoQueue;
