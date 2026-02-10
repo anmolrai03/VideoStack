@@ -65,14 +65,131 @@ const uploadVideoController = async (req , res ,next) => {
 };
 
 const getUserVideosController = async (req , res , next) => {
-  res.send("get user video")
+  try {
+    const {userId} = req.clientData;
+    const {status} = req.query;
+
+    const filters = {owner: userId};
+    if(status){
+      filters.status = status.toUpperCase();
+    }
+
+    debugLog("filters" , filters)
+
+    const videos = await Video.find(filters)
+                            .select("title description thumbnail createdAt status")
+                            .sort({createdAt: -1})
+                            .lean();
+
+    if(videos.length < 1){
+      throw new AppError({
+        statusCode: statusCodes.NOT_FOUND,
+        code: "NO_VIDEOS_FOUND",
+        message: "You do not have any uploaded videos."
+      })
+    }
+
+    return successResponse(
+      res,
+      statusCodes.OK,
+      "VIDEOS_SENT",
+      "Fetched your videos.",
+      videos
+    )
+
+
+  } catch (error) {
+    next(error);
+  }
 };
 
 const deleteVideoController = async(req , res, next) => {
-  const {id} = req.params;
-  const {userId} = req.clientData;
-  res.send(`Delete video with id: ${id} for user id: ${userId}`);
+  try {
+    const {videoId} = req.params;
+    const {userId} = req.clientData;
+
+    if(!videoId){
+      throw new AppError({
+        statusCode: statusCodes.BAD_REQUEST,
+        code: "VIDEO_ID_MISSING",
+        message: "Video Id is missing."
+      })
+    }
+
+    const video = await Video.findOne({_id: videoId});
+
+    if(!video){
+      throw new AppError({
+        statusCode: statusCodes.NOT_FOUND,
+        code: "VIDEO_NOT_FOUND",
+        message: "Video do not exist."
+      })
+    }
+
+    if( video.owner !== userId){
+      throw new AppError({
+        statusCode: statusCodes.UNAUTHORIZED,
+        code: "UNAUTHORIZED",
+        message: "Only owners have permission to delete."
+      })
+    }
+
+    await Video.findByIdAndDelete(videoId);
+
+    return successResponse(
+      res,
+      statusCodes.OK,
+      "VIDEO_DELETED",
+      "Deletion Successful"
+    );
+
+  } catch (error) {
+    next(error);
+  }
 };
 
+const getVideoStatusController = async (req , res, next) => {
+  try {
+    const {videoId} = req.params;
 
-export {uploadVideoController , getUserVideosController, deleteVideoController};
+    if(videoId.trim() === "" || !videoId){
+      throw new AppError({
+        statusCode: statusCodes.BAD_REQUEST,
+        code: "VIDEO_ID_MISSING",
+        message: "Video Id is missing."
+      })
+    }
+
+    const video = await Video.findOne({_id: videoId}).select("status owner").lean();
+
+    if(!video){
+      throw new AppError({
+        statusCode: statusCodes.NOT_FOUND,
+        code: "NOT_FOUND",
+        message: "Video not found."
+      })
+    }
+
+    if( String(video.owner) !== String(req.clientData.userId) ){
+      throw new AppError({
+        statusCode: statusCodes.UNAUTHORIZED,
+        code: "UNAUTHORIZED",
+        message: "This video do not belong to you."
+      })
+    }
+
+    return successResponse(
+      res,
+      statusCodes.OK,
+      "STATUS_SENT",
+      "Status fetched successfully.",
+      {status: video.status}
+    )
+
+  } catch (error) {
+    next(error);
+  }
+}
+
+
+export {uploadVideoController , getUserVideosController, deleteVideoController, getVideoStatusController};
