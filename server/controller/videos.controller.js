@@ -108,7 +108,7 @@ const deleteVideoController = async(req , res, next) => {
     const {videoId} = req.params;
     const {userId} = req.clientData;
 
-    if(!videoId){
+    if(!videoId || videoId.trim()){
       throw new AppError({
         statusCode: statusCodes.BAD_REQUEST,
         code: "VIDEO_ID_MISSING",
@@ -116,21 +116,14 @@ const deleteVideoController = async(req , res, next) => {
       })
     }
 
-    const video = await Video.findOne({_id: videoId});
+    const video = await Video.findOne({_id: videoId, owner: userId});
 
     if(!video){
       throw new AppError({
         statusCode: statusCodes.NOT_FOUND,
         code: "VIDEO_NOT_FOUND",
-        message: "Video do not exist."
-      })
-    }
-
-    if( video.owner !== userId){
-      throw new AppError({
-        statusCode: statusCodes.UNAUTHORIZED,
-        code: "UNAUTHORIZED",
-        message: "Only owners have permission to delete."
+        message: "Video do not exist.",
+        errors: [{field: "userid" , message: "You are not owner of the video."}]
       })
     }
 
@@ -152,7 +145,7 @@ const getVideoStatusController = async (req , res, next) => {
   try {
     const {videoId} = req.params;
 
-    if(videoId.trim() === "" || !videoId){
+    if( !videoId || videoId.trim() === ""){
       throw new AppError({
         statusCode: statusCodes.BAD_REQUEST,
         code: "VIDEO_ID_MISSING",
