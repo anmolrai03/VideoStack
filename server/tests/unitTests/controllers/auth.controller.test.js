@@ -15,6 +15,8 @@ import {
   verifyPasswordController,
   getUserDetailsController,
 } from "../../../controller/auth.controller.js";
+import debugLog from "../../../utils/debugLog.js";
+import formatDate from "../../../utils/formatDate.js";
 
 // MOCKING MODULES
 vi.mock("../../../models/users.model.js", () => {
@@ -537,6 +539,8 @@ describe("Verify Password Controller", () => {
 });
 
 // GET ME CONTROLLER
+import { successResponse } from "../../../utils/responseHandler.js";
+
 describe("getMe Controller", () => {
   let req, res, next;
 
@@ -558,6 +562,7 @@ describe("getMe Controller", () => {
     req.clientData.userId = "123";
 
     User.findOne.mockReturnValue({
+      select: vi.fn().mockReturnThis(),
       lean: vi.fn().mockResolvedValue(null),
     });
 
@@ -568,38 +573,35 @@ describe("getMe Controller", () => {
   });
 
   it("should return user data successfully", async () => {
-    //ARRANGE
     req.clientData.userId = "123";
 
     User.findOne.mockReturnValue({
+      select: vi.fn().mockReturnThis(),
       lean: vi.fn().mockResolvedValue({
-        _id: "123",
         email: "test@test.com",
         fullname: "Test user",
         username: "userTest13",
+        createdAt: new Date(),
       }),
     });
 
-    //ACT
     await getUserDetailsController(req, res, next);
 
-    //ASSERT
-    expect(successResponse).toHaveBeenCalledOnce();
     expect(next).not.toHaveBeenCalled();
+    expect(successResponse).toHaveBeenCalledOnce();
 
-    const user = {
-      _id: "123",
-      email: expect.any(String),
-      fullname: expect.any(String),
-      username: expect.any(String)
-    }
     expect(successResponse).toHaveBeenCalledWith(
       res,
-      200,
+      statusCodes.OK,
       "USER_DATA_SENT",
-      expect.any(String),
-      expect.objectContaining(user)
+      "User data received",
+      expect.objectContaining({
+        email: "test@test.com",
+        fullname: "Test user",
+        username: "userTest13",
+        createdAt: expect.any(Object),
+      })
     );
-
   });
 });
+
