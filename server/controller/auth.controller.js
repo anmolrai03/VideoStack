@@ -8,6 +8,7 @@ import debugLog from "../utils/debugLog.js";
 import { checkPassword, checkEmail } from "../utils/validateData.js";
 
 import { statusCodes } from "../constants/statusCodes.js";
+import formatDate from "../utils/formatDate.js";
 
 // LOGIN CONTROLLER
 const loginController = async (req, res, next) => {
@@ -68,7 +69,7 @@ const loginController = async (req, res, next) => {
       httpOnly: true,
       sameSite: isProduction ? "none" : "lax",
       secure: isProduction,
-      maxAge: 24 * 60 *60 *1000
+      maxAge: 24 * 60 * 60 * 1000,
     });
 
     // SEND RESPONSE TO THE USER
@@ -219,7 +220,7 @@ const verifyPasswordController = async (req, res, next) => {
     debugLog("Verify passowrd", { password, userId });
 
     //VALIDATE PASSWORD
-    if( !password ){
+    if (!password) {
       throw new AppError({
         statusCode: statusCodes.BAD_REQUEST,
         code: "VALIDATION_ERROR",
@@ -273,7 +274,9 @@ const getUserDetailsController = async (req, res, next) => {
     }
 
     // QUERY DATA
-    const user = await User.findOne({ _id: userId }).lean();
+    const user = await User.findOne({ _id: userId })
+      .select("-_id -__v -updatedAt")
+      .lean();
     if (!user) {
       throw new AppError({
         statusCode: statusCodes.NOT_FOUND,
@@ -283,12 +286,17 @@ const getUserDetailsController = async (req, res, next) => {
     }
 
     // RETURN RESPONSE
+    const {date , time} = formatDate(user.createdAt);
+
     return successResponse(
       res,
       statusCodes.OK,
       "USER_DATA_SENT",
       "User data received",
-      user,
+      {
+        ...user,
+        createdAt:{date , time}
+      }
     );
   } catch (error) {
     next(error);
