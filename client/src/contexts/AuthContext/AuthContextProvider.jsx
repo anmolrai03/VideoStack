@@ -3,7 +3,7 @@ import {AuthContext} from "./AuthContext";
 
 import {useGetMe} from "../../hooks/auth/auth.hooks.js";
 
-export function AuthContextProvider({children}){
+export default function AuthContextProvider({children}){
 
   const {execute: getMe}  = useGetMe();
 
