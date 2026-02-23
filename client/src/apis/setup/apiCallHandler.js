@@ -7,7 +7,7 @@ async function apiCallHandler(requestFn, fallbackSuccessMessage="Request Success
       response?.data, response?.data?.message || fallbackSuccessMessage
     )
   } catch (error) {
-    console.log("API Error: ", error);
+    console.log("API Error,",error.message,":", error);
     return errorResponse(error?.response?.data?.message || error.message || "API Error Occured.")
   }
 }

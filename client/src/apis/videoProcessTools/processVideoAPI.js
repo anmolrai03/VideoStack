@@ -1,4 +1,4 @@
-import api from "../../utils/api";
+import api from "../setup/api.js"
 
 async function processVideoAPI(payload){
   return api.post("/api/convert", payload,{
