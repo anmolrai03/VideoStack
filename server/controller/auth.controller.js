@@ -287,6 +287,12 @@ const getUserDetailsController = async (req, res, next) => {
 
     // RETURN RESPONSE
     const {date , time} = formatDate(user.createdAt);
+    const avatarName = currUser.fullname
+      .trim()
+      .split(" ")
+      .filter(Boolean)
+      .map((word) => word[0].toUpperCase())
+      .join("");
 
     return successResponse(
       res,
@@ -295,7 +301,8 @@ const getUserDetailsController = async (req, res, next) => {
       "User data received",
       {
         ...user,
-        createdAt:{date , time}
+        createdAt:{date , time},
+        avatarName
       }
     );
   } catch (error) {
