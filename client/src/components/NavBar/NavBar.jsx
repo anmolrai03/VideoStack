@@ -144,7 +144,7 @@ export default function Navbar() {
               </div>
             ) : 
             (
-              <NavLink to="/login">
+              <NavLink to="/auth">
                 <ActionButton
                   buttonName="Login/Signup"
                   icon={<LogIn />}

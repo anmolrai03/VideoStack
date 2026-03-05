@@ -158,7 +158,7 @@ export default function MobileViewNav({ isOpen, toggleMenu, user }) {
                 {/* Border line through login button */}
                 <div className="absolute left-0 right-0 top-1/2 h-px bg-[var(--border-subtle)]" />
                 
-                <Link to="/login" onClick={toggleMenu}>
+                <Link to="/auth" onClick={toggleMenu}>
                   <ActionButton
                     buttonName="LOGIN / SIGNUP"
                     icon={<LogIn />}
