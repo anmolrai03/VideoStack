@@ -1,9 +1,5 @@
 function Home() {
   return (
-    // <div>
-    //   <h2 className="text-center text-2xl">Home</h2>
-    //   <Link to="/video/tools" className='underline text-base text-blue-400'>Video tools</Link>
-    // </div>
     <div className="bg-background min-h-screen text-white">
       <section className="vs-hero">
         {/* Replace later with your image */}
@@ -21,7 +17,11 @@ function Home() {
 
         <div className="vs-hero-content">
           {/* BIG BRAND TEXT */}
-          <h1 className="vs-hero-title">VIDEOSTACK</h1>
+          <h1
+            className="text-[clamp(2rem,10vw,13rem)] leading-[0.9] tracking-[-0.04em] font-light select-none relative z-10 wrap-break-word"
+          >
+            VIDEOSTACK
+          </h1>
 
           {/* description */}
           <div className="max-w-xl mt-10 space-y-6">
