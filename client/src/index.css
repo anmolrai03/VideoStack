@@ -23,7 +23,9 @@
   --radius: 14px;
 }
 
-html, body, #root {
+html,
+body,
+#root {
   min-width: 300px;
 }
 
@@ -239,10 +241,61 @@ html, body, #root {
   .writing-mode-vertical {
     writing-mode: vertical-rl;
     text-orientation: mixed;
-
   }
 
   .writing-mode-horizontal {
     writing-mode: horizontal-tb;
+  }
+
+  /* PIPE FLOW ANIMATION */
+
+  .vs-pipe-flow-horizontal {
+    position: absolute;
+    left: -40px;
+    top: -3px;
+    width: 40px;
+    height: 6px;
+    border-radius: 10px;
+    background: radial-gradient(
+      circle,
+      white 0%,
+      rgba(255, 255, 255, 0.4) 40%,
+      transparent 70%
+    );
+    animation: pipeFlowX 4s linear infinite;
+  }
+
+  .vs-pipe-flow-vertical {
+    position: absolute;
+    top: -40px;
+    left: -3px;
+    width: 6px;
+    height: 40px;
+    border-radius: 10px;
+    background: radial-gradient(
+      circle,
+      white 0%,
+      rgba(255, 255, 255, 0.4) 40%,
+      transparent 70%
+    );
+    animation: pipeFlowY 5s linear infinite;
+  }
+
+  @keyframes pipeFlowX {
+    0% {
+      transform: translateX(-40px);
+    }
+    100% {
+      transform: translateX(calc(100vw + 40px));
+    }
+  }
+
+  @keyframes pipeFlowY {
+    0% {
+      transform: translateY(-40px);
+    }
+    100% {
+      transform: translateY(calc(100vh + 40px));
+    }
   }
 }
