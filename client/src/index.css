@@ -21,6 +21,16 @@
 
   /* RADIUS */
   --radius: 14px;
+
+  /* SONNER TOASTER CUSTOMIZATION */
+  --sonner-toast-background: var(--bg-card); /* Background of the toast */
+  --sonner-toast-border: var(--border-subtle); /* Border color */
+  --sonner-toast-message-color: var(--text-primary); /* Text color */
+  --sonner-toast-success-background: #10b981; /* Success toast background */
+  --sonner-toast-error-background: #ef4444; /* Error toast background */
+  --sonner-toast-warning-background: #f59e0b; /* Warning toast background */
+  --sonner-toast-info-background: #3b82f6; /* Info toast background */
+  --sonner-toast-icon-filter: brightness(0) invert(1); /* Invert icons for dark theme */
 }
 
 html,
@@ -299,3 +309,53 @@ body,
     }
   }
 }
+
+/* Override Sonner's default styles */
+.sonner-toast {
+  background-color: var(--sonner-toast-background) !important;
+  border: 1px solid var(--sonner-toast-border) !important;
+  color: var(--sonner-toast-message-color) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+.sonner-toast-success {
+  background-color: var(--sonner-toast-success-background) !important;
+  border-color: var(--sonner-toast-success-background) !important;
+}
+
+.sonner-toast-error {
+  background-color: var(--sonner-toast-error-background) !important;
+  border-color: var(--sonner-toast-error-background) !important;
+}
+
+.sonner-toast-warning {
+  background-color: var(--sonner-toast-warning-background) !important;
+  border-color: var(--sonner-toast-warning-background) !important;
+}
+
+.sonner-toast-info {
+  background-color: var(--sonner-toast-info-background) !important;
+  border-color: var(--sonner-toast-info-background) !important;
+}
+
+/* Invert icons for dark theme */
+.sonner-toast-icon {
+  filter: var(--sonner-toast-icon-filter) !important;
+}
+
+/* Close button */
+.sonner-toast-close-button {
+  color: var(--text-secondary) !important;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.sonner-toast-close-button:hover {
+  opacity: 1;
+}
+
+/* Progress bar */
+.sonner-toast-progress {
+  background-color: var(--border-visible) !important;
+}
+
