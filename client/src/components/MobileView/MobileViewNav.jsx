@@ -1,31 +1,48 @@
 // components/MobileView.jsx
 import { Link, NavLink } from 'react-router-dom';
+import { toast } from 'sonner';
+
 import { X, LogIn } from 'lucide-react';
 
 import ActionButton from '../ActionButton/ActionButton';
+import { useLogout } from '../../hooks/auth/auth.hooks';
+import { useAuthContext } from '../../contexts/AuthContext/AuthContext';
 
-export default function MobileViewNav({ isOpen, toggleMenu, user }) {
+export default function MobileViewNav({ isOpen, toggleMenu }) {
+
+  const {logout, loading: logoutLoading} = useLogout();
+
+  const {user} = useAuthContext();
+
   if (!isOpen) return null;
 
-  const handleLogout = () => {
-    console.log("handle logout")
+  const handleLogout = async () => {
+    console.log("Handle logout called.")
+    const res =await logout();
+    if( res.success){
+      toast.success(res.message, {duration: 800});
+    } else {
+      toast.error(res.message, {duration: 800});
+    }
   }
 
   return (
     <div className="fixed inset-0 z-40 md:hidden">
       {/* Background with theme color and box structure */}
       <div className="absolute inset-0 bg-[var(--bg-canvas)]">
-        {/* Box grid structure - exactly like footer */}
+
+        {/* Box grid structure  */}
         <div className="absolute inset-0">
           {/* Outer frame border */}
           <div className="absolute inset-6 border border-[var(--border-subtle)]" />
           
-          {/* Vertical lines - creating columns */}
+          {/*VERTICAL LINES CREATING COLUMNS STARTS HERE */}
           <div className="absolute inset-6 flex justify-between">
             {[...Array(4)].map((_, i) => (
               <div key={i} className="w-px h-full bg-[var(--border-subtle)]" />
             ))}
           </div>
+          {/*VERTICAL LINES CREATING COLUMNS ENDS HERE */}
           
           {/* Horizontal lines - creating rows */}
           <div className="absolute inset-6 flex flex-col justify-between">
@@ -57,7 +74,9 @@ export default function MobileViewNav({ isOpen, toggleMenu, user }) {
       <div className="relative h-full overflow-y-auto p-6 z-10">
         {/* Close button and VIDEOSTACK headline - sitting on border */}
         <div className="relative mb-12">
-          <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-4">
+
+          <div className="flex items-center justify-between border-b border-(--border-subtle) pb-4">
+            {/* BUTTON FOR X STARTS HERE */}
             <button
               onClick={toggleMenu}
               className="text-[var(--text-secondary)] hover:text-white transition-colors bg-[var(--bg-canvas)] px-2 -ml-2 relative z-10"
@@ -65,14 +84,24 @@ export default function MobileViewNav({ isOpen, toggleMenu, user }) {
             >
               <X size={20} />
             </button>
-            <h2 className="text-xl tracking-tight font-light text-[var(--text-secondary)] absolute left-1/2 transform -translate-x-1/2 bg-[var(--bg-canvas)] px-4">
+            {/* BUTTON FOR X ENDS HERE */}
+
+            {/* HEADING STARTS HERE */}
+            <Link to="/">
+              <h2 className="text-xl tracking-tight font-light text-(--text-secondary) absolute left-1/2 transform -translate-x-1/2 bg-(--bg-canvas) px-4">
               VIDEOSTACK
             </h2>
+            </Link>
+            
+            {/* HEADING ENDS HERE */}
+
             <div className="w-5" /> {/* Spacer */}
           </div>
+
           {/* Small border continuation lines */}
           <div className="absolute left-0 bottom-0 w-2 h-px bg-[var(--border-subtle)]" />
           <div className="absolute right-0 bottom-0 w-2 h-px bg-[var(--border-subtle)]" />
+
         </div>
 
         {/* Menu items with border integration */}
@@ -135,22 +164,22 @@ export default function MobileViewNav({ isOpen, toggleMenu, user }) {
                       // Add your logout logic here
                       handleLogout();
                     }}
-                    className="
+                    className={`
                       relative z-10
                       text-[clamp(1.1rem,4vw,1.5rem)]
                       font-light tracking-[0.15em]
                       px-6 py-2
-                      bg-[var(--bg-canvas)]
-                      text-[var(--text-muted)]
+                      bg-(--bg-canvas)
+                      ${logoutLoading ? "" : "text-(--text-muted)"}
                       transition-all duration-300
                       hover:text-white hover:tracking-[0.2em]
                       border border-transparent hover:border-white/10
-                    "
+                    `}
                   >
-                    LOGOUT
+                    {logoutLoading ? "Logging out...." : "LOGOUT"}
                   </button>
-                  <div className="absolute left-0 top-1/2 w-2 h-px bg-[var(--border-subtle)] -translate-y-1/2" />
-                  <div className="absolute right-0 top-1/2 w-2 h-px bg-[var(--border-subtle)] -translate-y-1/2" />
+                  <div className="absolute left-0 top-1/2 w-2 h-px bg-(--border-subtle) -translate-y-1/2" />
+                  <div className="absolute right-0 top-1/2 w-2 h-px bg-(--border-subtle) -translate-y-1/2" />
                 </div>
               </div>
             ) : (
@@ -196,6 +225,7 @@ export default function MobileViewNav({ isOpen, toggleMenu, user }) {
         </div>
 
       </div>
+
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { NavLink } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 
 import { Menu, X, LogIn, User } from "lucide-react";
 
@@ -7,20 +7,15 @@ import { useAuthContext } from "../../contexts/AuthContext/AuthContext.js";
 import ActionButton from "../ActionButton/ActionButton.jsx";
 
 import MobileViewNav from "../MobileView/MobileViewNav.jsx";
+import { useLogout } from "../../hooks/auth/auth.hooks.js";
+import { toast } from "sonner";
 
 export default function Navbar() {
-  const { user } = useAuthContext();
 
-  // const user = {
-  //   fullname: "Test User 1",
-  //   email: "test@user1.com",
-  //   username: "testuser1",
-  //   createdAt: {
-  //     date: "05 February 2026",
-  //     time: "15:51",
-  //   },
-  //   avatarName: "TU1"
-  // };
+  const { user } = useAuthContext();
+  // const navigate = useNavigate();
+
+  const {logout, loading: apiLoading} = useLogout();
 
   const [isOpen, setIsOpen] = useState(false);
   const [showAvatarDropdown, setShowAvatarDropdown] = useState(false);
@@ -56,8 +51,16 @@ export default function Navbar() {
   const toggleMenu = () => setIsOpen(!isOpen);
 
   //LOGOUT HANDLER
-  const handleLogout = () => {
+  const handleLogout = async () => {
     console.log("Handle logout called.")
+    const res =await logout();
+    if( res.success){
+      toast.success(res.message, {duration: 800});
+    } else {
+      toast.error(res.message, {duration: 800});
+    }
+    // navigate("/auth");
+
   }
 
   return (
@@ -65,9 +68,10 @@ export default function Navbar() {
       {/* DESKTOP VIEW STARTS HERE */}
       <nav className="vs-navbar">
         {/* LOGO FOR > MOBILE STARTS HERE*/}
-        <div className="text-2xl tracking-tight hidden md:block">
+        
+        <Link to="/" className="text-2xl tracking-tight hidden md:block">
           VIDEOSTACK
-        </div>
+        </Link>
         {/* LOGO FOR > MOBILE ENDS HERE*/}
 
         {/* LOGO FOR MOBILE STARTS HERE*/}
@@ -134,10 +138,11 @@ export default function Navbar() {
                       <User size={14} /> Profile
                     </NavLink>
                     <button
-                      className="w-full text-left px-4 py-2 text-text-primary hover:bg-(--bg-hover) transition-colors flex items-center gap-2 cursor-pointer"
+                      className={`w-full text-left px-4 py-2 hover:bg-(--bg-hover) transition-colors flex items-center gap-2 cursor-pointer ${apiLoading ? "text-text-muted": "text-text-primary"}`}
                       onClick={handleLogout}
                     >
-                      <LogIn size={14} /> Logout
+                      {apiLoading ? "logging out...":<><LogIn size={14} /> Logout </>}
+                      
                     </button>
                   </div>
                 )}
@@ -159,7 +164,7 @@ export default function Navbar() {
       {/* DESKTOP VIEW ENDS HERE */}
 
       {/* Mobile Menu Overlay: Full-screen with blur */}
-      <MobileViewNav isOpen={isOpen} toggleMenu={toggleMenu} user={user} />
+      <MobileViewNav isOpen={isOpen} toggleMenu={toggleMenu} />
     </>
   );
 }
