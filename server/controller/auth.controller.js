@@ -261,8 +261,11 @@ const verifyPasswordController = async (req, res, next) => {
 };
 
 const getUserDetailsController = async (req, res, next) => {
+  debugLog("entered getme: ")
   try {
+    debugLog("userid middlewaree", req.clientData);
     const { userId } = req.clientData;
+    
 
     // VALIDATE USERID
     if (!userId) {
@@ -274,6 +277,7 @@ const getUserDetailsController = async (req, res, next) => {
     }
 
     // QUERY DATA
+    debugLog("query db")
     const user = await User.findOne({ _id: userId })
       .select("-_id -__v -updatedAt")
       .lean();
@@ -284,15 +288,24 @@ const getUserDetailsController = async (req, res, next) => {
         message: "The user do not exist in database.",
       });
     }
+    debugLog("getme just user: (raw)", user);
 
     // RETURN RESPONSE
+    debugLog("response formation.")
+    
     const {date , time} = formatDate(user.createdAt);
-    const avatarName = currUser.fullname
+    debugLog("data done")
+    debugLog("avatar")
+    const avatarName = user.fullname
       .trim()
       .split(" ")
       .filter(Boolean)
       .map((word) => word[0].toUpperCase())
       .join("");
+      
+    debugLog("avatar done");
+
+    debugLog("Get me", avatarName, user)
 
     return successResponse(
       res,
