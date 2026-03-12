@@ -7,22 +7,33 @@ export function useAction(actionFun) {
 
   const execute = useCallback(
     async (...args) => {
-
       setLoading(true);
       setError(null);
 
       try {
         const result = await actionFun(...args);
+        console.log("useAction: ", result);
         if (!result.success) {
-          setError(result.message);
+          setError(result);
+        } else {
+          setData(result.data);
         }
-        setData(result.data);
         return result;
       } catch (err) {
         console.log("Error in the API hook: ", err);
-        setError("Something went wrong.");
-        return {success: false , data: null, message: "Something went wrong."}
-      }finally{
+        const normalizedError = {
+          success: false,
+          data: null,
+          message:
+            err?.response?.data?.message ||
+            err.message ||
+            "Something went wrong.",
+          errors: err?.response?.data?.errors || []
+        };
+
+        setError(normalizedError);
+        return normalizedError;
+      } finally {
         setLoading(false);
       }
     },
