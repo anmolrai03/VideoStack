@@ -6,10 +6,11 @@ function successResponse(data, message = "success"){
   }
 }
 
-function errorResponse(message = "error"){
+function errorResponse(message = "error", errors=[]){
   return {
     success: false,
     data: null,
+    errors,
     message
   }
 }
