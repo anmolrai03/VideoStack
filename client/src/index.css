@@ -359,3 +359,58 @@ body,
   background-color: var(--border-visible) !important;
 }
 
+
+
+/* FASTER + BRIGHTER Pipe Flow Animations */
+.vs-pipe-flow-horizontal-fast {
+  position: absolute;
+  left: -40px;
+  top: -3px;
+  width: 40px;
+  height: 6px;
+  border-radius: 10px;
+  background: radial-gradient(
+    circle,
+    white 0%,
+    rgba(255, 255, 255, 0.8) 50%, /* Brighter glow */
+    transparent 80%
+  );
+  animation: pipeFlowXFast 2s linear infinite; /* Faster animation (2s → 4s) */
+}
+
+.vs-pipe-flow-vertical-fast {
+  position: absolute;
+  top: -40px;
+  left: -3px;
+  width: 6px;
+  height: 40px;
+  border-radius: 10px;
+  background: radial-gradient(
+    circle,
+    white 0%,
+    rgba(255, 255, 255, 0.8) 50%, /* Brighter glow */
+    transparent 80%
+  );
+  animation: pipeFlowYFast 2.5s linear infinite; /* Faster animation (2.5s → 5s) */
+}
+
+/* Faster pipe flow animations */
+@keyframes pipeFlowXFast {
+  0% { transform: translateX(-40px); }
+  100% { transform: translateX(calc(100vw + 40px)); }
+}
+
+@keyframes pipeFlowYFast {
+  0% { transform: translateY(-40px); }
+  100% { transform: translateY(calc(100vh + 40px)); }
+}
+
+/* Faster bouncing dots */
+@keyframes bounceFast {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); } /* Higher bounce */
+}
+
+.animate-bounce-fast {
+  animation: bounceFast 0.8s infinite ease-in-out; /* Faster (0.8s → 1.4s) */
+}
