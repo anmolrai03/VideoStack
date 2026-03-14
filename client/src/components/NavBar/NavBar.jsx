@@ -75,9 +75,9 @@ export default function Navbar() {
         {/* LOGO FOR > MOBILE ENDS HERE*/}
 
         {/* LOGO FOR MOBILE STARTS HERE*/}
-        <div className="md:hidden absolute left-1/2 transform -translate-x-1/2 text-xl tracking-tight">
+        <Link to="/" className="md:hidden absolute left-1/2 transform -translate-x-1/2 text-xl tracking-tight">
           VIDEOSTACK
-        </div>
+        </Link>
         {/* LOGO FOR MOBILE ENDS HERE*/}
 
         {/* HAMBURGER FOR MOBILE MENU STARTS HERE*/}
