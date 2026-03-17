@@ -2,6 +2,7 @@ function successResponse(data, message = "success"){
   return {
     success: true,
     data,
+    errors: [],
     message
   }
 }
