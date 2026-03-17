@@ -37,7 +37,7 @@ function Login() {
       toast.success(result?.message, {duration: 800});
       reset();
       await refetchUser();
-      navigate("/")
+      navigate("/feed")
     } else {
       toast.error(result?.message, {duration: 1000});
       // Set API field errors in state
