@@ -110,6 +110,12 @@ export default function Navbar() {
               >
                 Upload
               </NavLink>
+              <NavLink
+                to="/feed"
+                className={({ isActive }) => (isActive ? "vs-nav-active" : "")}
+              >
+                Upload
+              </NavLink>
             </>
           )}
         </div>

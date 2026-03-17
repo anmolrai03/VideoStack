@@ -124,6 +124,7 @@ export default function MobileViewNav({ isOpen, toggleMenu }) {
                   { to: "/", label: "HOME" },
                   { to: "/manage", label: "MANAGE" },
                   { to: "/upload", label: "UPLOAD" },
+                  { to: "/feed", label: "Feed" },
                   { to: "/profile", label: "PROFILE" }
                 ].map((item) => (
                   <div key={item.to} className="relative flex items-center justify-center group">
