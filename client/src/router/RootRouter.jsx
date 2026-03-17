@@ -74,8 +74,8 @@ function RootRouter() {
             element={
               <ProtectedRoute >
                 <Suspense fallback={<Loading />}>
-                <StreamPage />
-              </Suspense>
+                  <StreamPage />
+                </Suspense>
               </ProtectedRoute>
               
             }
