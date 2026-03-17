@@ -12,16 +12,30 @@ import Layout from "../Layout";
 const Home = lazy(() => import("../pages/Home/Home"));
 const Auth = lazy(() => import("../pages/Auth/Auth"));
 const VideoProcess = lazy(() => import("../pages/VideoProcess"));
+const Feed = lazy( ()=> import("../pages/Feed/Feed") );
+
 const Test = lazy(() => import("../pages/Test"));
 
 // Loading component
 import Loading from "../pages/Loading/Loading";
+import StreamPage from "../pages/StreamPage/StreamPage";
+import Navbar from "../components/NavBar/NavBar";
+
+import ProtectedRoute from "./ProtectedRoute"
 
 function RootRouter() {
   const router = createBrowserRouter(
     createRoutesFromChildren(
       <>
         {/* UNPROTECTED ROUTES STARTS HERE */}
+        <Route path="/"
+            element={
+              <Suspense fallback={<Loading />}>
+                <Navbar />
+                <Home />
+              </Suspense>
+            }
+          />
         <Route
           path="/video/tools"
           element={
@@ -42,14 +56,31 @@ function RootRouter() {
 
         {/* PROTECTED ROUTES STARTS HERE */}
         <Route path="/" element={<Layout />}>
-          <Route index
+          
+          {/* Lazy-loaded test page */}
+          <Route
+            path="feed"
             element={
-              <Suspense fallback={<Loading />}>
-                <Home />
+              <ProtectedRoute >
+                <Suspense fallback={<Loading />}>
+                <Feed />
               </Suspense>
+              </ProtectedRoute>
             }
           />
-          {/* Lazy-loaded test page */}
+
+          <Route
+            path="stream/:videoId"
+            element={
+              <ProtectedRoute >
+                <Suspense fallback={<Loading />}>
+                <StreamPage />
+              </Suspense>
+              </ProtectedRoute>
+              
+            }
+          />
+
           <Route
             path="test"
             element={
@@ -58,6 +89,7 @@ function RootRouter() {
               </Suspense>
             }
           />
+
         </Route>
         {/* PROTECTED ROUTES ENDS HERE */}
 

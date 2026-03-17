@@ -10,7 +10,7 @@ function ProtectedRoute({children}) {
   }
 
   if( !user ){
-    return <Navigate to="/login"></Navigate>
+    return <Navigate to="/auth"></Navigate>
   }
 
   return children;

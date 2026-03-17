@@ -48,7 +48,7 @@ function Home() {
             </div>
 
             {/* Feed button */}
-            <Link to="/feed">
+            {/* <Link to="/feed">
               <ActionButton
                 buttonName="Go to Feed"
                 icon={<ChevronRight />}
@@ -64,7 +64,7 @@ function Home() {
                 iconPosition="right"
                 cssClass="mt-4" // Add margin if needed
               />
-            </Link>
+            </Link> */}
           </div>
         </section>
       </div>
