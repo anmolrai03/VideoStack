@@ -8,14 +8,17 @@
   "main": "server.js",
   "scripts": {
     "test": "vitest",
-    "dev:all": "concurrently \"nodemon server.js\" \"nodemon workers/index.js\"",
+
     "dev": "nodemon server.js",
     "dev:workers": "nodemon workers/index.js",
+
     "start": "node server.js",
     "start:workers": "node workers/index.js",
-    "docker-redis": "docker run -d -p 6379:6379 --name redis-dev redis:7",
-    "docker-redis-start": "docker start c2346b830e00e63a9a32b6e7622970254dc1289ab2584cd650347ad5479cd1eb",
-    "docker-redis-stop": "docker stop c2346b830e00e63a9a32b6e7622970254dc1289ab2584cd650347ad5479cd1eb"
+
+    "redis:start": "docker start redis-dev || docker run -d -p 6379:6379 --name redis-dev redis:7",
+    "redis:stop": "docker stop redis-dev",
+    
+    "dev:all": "npm run redis:start && concurrently -k --names \"SERVER,WORKER\" --prefix-colors \"red,yellow\" \"npm run dev\" \"npm run dev:workers\""
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

@@ -99,10 +99,10 @@ export default function Navbar() {
                 Home
               </NavLink>
               <NavLink
-                to="/manage"
+                to="/my-videos"
                 className={({ isActive }) => (isActive ? "vs-nav-active" : "")}
               >
-                Manage
+                My Videos
               </NavLink>
               <NavLink
                 to="/upload"
@@ -114,7 +114,7 @@ export default function Navbar() {
                 to="/feed"
                 className={({ isActive }) => (isActive ? "vs-nav-active" : "")}
               >
-                Upload
+                Feed
               </NavLink>
             </>
           )}
@@ -137,11 +137,11 @@ export default function Navbar() {
                 {showAvatarDropdown && (
                   <div className="absolute right-0 mt-2 w-40 bg-bg-card border border-border-subtle rounded-lg shadow-lg z-50 overflow-hidden">
                     <NavLink
-                      to="/profile"
+                      to="/settings"
                       className="px-4 py-2 text-text-primary hover:bg-(--bg-hover) transition-colors flex items-center gap-2"
                       onClick={() => setShowAvatarDropdown(false)}
                     >
-                      <User size={14} /> Profile
+                      <User size={14} /> Settings
                     </NavLink>
                     <button
                       className={`w-full text-left px-4 py-2 hover:bg-(--bg-hover) transition-colors flex items-center gap-2 cursor-pointer ${apiLoading ? "text-text-muted": "text-text-primary"}`}

@@ -7,13 +7,17 @@ import {
 } from "react-router-dom";
 
 import Layout from "../Layout";
+import ProtectedRoute from "./ProtectedRoute";
 
 // Lazy-loaded pages
 const Home = lazy(() => import("../pages/Home/Home"));
 const Auth = lazy(() => import("../pages/Auth/Auth"));
 const VideoProcess = lazy(() => import("../pages/VideoProcess"));
 const Feed = lazy( ()=> import("../pages/Feed/Feed") );
-
+const MyVideos = lazy(() => import("../pages/MyVideos/MyVideos"));
+const Upload = lazy(() => import("../pages/Upload/Upload"));
+const VideoPlayer = lazy(() => import("../pages/VideoPlayer/VideoPlayer"));
+const Settings = lazy(() => import("../pages/Settings/Settings"));
 const Test = lazy(() => import("../pages/Test"));
 
 // Loading component
@@ -21,7 +25,6 @@ import Loading from "../pages/Loading/Loading";
 import StreamPage from "../pages/StreamPage/StreamPage";
 import Navbar from "../components/NavBar/NavBar";
 
-import ProtectedRoute from "./ProtectedRoute"
 
 function RootRouter() {
   const router = createBrowserRouter(
@@ -65,6 +68,50 @@ function RootRouter() {
                 <Suspense fallback={<Loading />}>
                 <Feed />
               </Suspense>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="my-videos"
+            element={
+              <ProtectedRoute>
+                <Suspense fallback={<Loading />}>
+                  <MyVideos />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="upload"
+            element={
+              <ProtectedRoute>
+                <Suspense fallback={<Loading />}>
+                  <Upload />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="video/:id"
+            element={
+              <ProtectedRoute>
+                <Suspense fallback={<Loading />}>
+                  <VideoPlayer />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="settings"
+            element={
+              <ProtectedRoute>
+                <Suspense fallback={<Loading />}>
+                  <Settings />
+                </Suspense>
               </ProtectedRoute>
             }
           />

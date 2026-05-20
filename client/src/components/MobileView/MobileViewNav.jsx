@@ -122,10 +122,9 @@ export default function MobileViewNav({ isOpen, toggleMenu }) {
                 {/* Each menu item sits on a border line */}
                 {[
                   { to: "/", label: "HOME" },
-                  { to: "/manage", label: "MANAGE" },
+                  { to: "/my-videos", label: "MY VIDEOS" },
                   { to: "/upload", label: "UPLOAD" },
-                  { to: "/feed", label: "Feed" },
-                  { to: "/profile", label: "PROFILE" }
+                  { to: "/settings", label: "SETTINGS" }
                 ].map((item) => (
                   <div key={item.to} className="relative flex items-center justify-center group">
                     {/* Border line through the item */}

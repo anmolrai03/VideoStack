@@ -22,7 +22,7 @@ export function useLogout() {
     const result = await execute();
     if (result.success) {
       await refetchUser(); // Re-fetch user to clear state
-      navigate("/auth");
+      navigate("/");
     }
     return result;
   };
