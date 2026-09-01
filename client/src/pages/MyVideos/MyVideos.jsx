@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useGetUserVideo, useDeleteVideo } from "../../hooks/videos/video.hooks";
 import VideoCard from "../../components/VideoCard/VideoCard";
-import { FolderVideo, Trash2 } from "lucide-react";
+import { FileVideo, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function MyVideos() {
@@ -101,7 +101,7 @@ export default function MyVideos() {
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center py-24 text-neutral-500 gap-4">
-          <FolderVideo size={48} className="opacity-20" />
+          <FileVideo size={48} className="opacity-20" />
           <p>You haven't uploaded any videos yet.</p>
         </div>
       )}
