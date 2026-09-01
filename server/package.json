@@ -8,12 +8,16 @@
   "main": "server.js",
   "scripts": {
     "test": "vitest",
+
     "dev": "nodemon server.js",
     "dev:workers": "nodemon workers/index.js",
+
     "start": "node server.js",
     "start:workers": "node workers/index.js",
+
     "redis:start": "docker start redis-dev || docker run -d -p 6379:6379 --name redis-dev redis:7",
     "redis:stop": "docker stop redis-dev",
+    
     "dev:all": "npm run redis:start && concurrently -k --names \"SERVER,WORKER\" --prefix-colors \"red,yellow\" \"npm run dev\" \"npm run dev:workers\""
   },
   "dependencies": {

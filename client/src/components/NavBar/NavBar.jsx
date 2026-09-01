@@ -75,9 +75,9 @@ export default function Navbar() {
         {/* LOGO FOR > MOBILE ENDS HERE*/}
 
         {/* LOGO FOR MOBILE STARTS HERE*/}
-        <div className="md:hidden absolute left-1/2 transform -translate-x-1/2 text-xl tracking-tight">
+        <Link to="/" className="md:hidden absolute left-1/2 transform -translate-x-1/2 text-xl tracking-tight">
           VIDEOSTACK
-        </div>
+        </Link>
         {/* LOGO FOR MOBILE ENDS HERE*/}
 
         {/* HAMBURGER FOR MOBILE MENU STARTS HERE*/}
@@ -99,16 +99,22 @@ export default function Navbar() {
                 Home
               </NavLink>
               <NavLink
-                to="/manage"
+                to="/my-videos"
                 className={({ isActive }) => (isActive ? "vs-nav-active" : "")}
               >
-                Manage
+                My Videos
               </NavLink>
               <NavLink
                 to="/upload"
                 className={({ isActive }) => (isActive ? "vs-nav-active" : "")}
               >
                 Upload
+              </NavLink>
+              <NavLink
+                to="/feed"
+                className={({ isActive }) => (isActive ? "vs-nav-active" : "")}
+              >
+                Feed
               </NavLink>
             </>
           )}
@@ -131,11 +137,11 @@ export default function Navbar() {
                 {showAvatarDropdown && (
                   <div className="absolute right-0 mt-2 w-40 bg-bg-card border border-border-subtle rounded-lg shadow-lg z-50 overflow-hidden">
                     <NavLink
-                      to="/profile"
+                      to="/settings"
                       className="px-4 py-2 text-text-primary hover:bg-(--bg-hover) transition-colors flex items-center gap-2"
                       onClick={() => setShowAvatarDropdown(false)}
                     >
-                      <User size={14} /> Profile
+                      <User size={14} /> Settings
                     </NavLink>
                     <button
                       className={`w-full text-left px-4 py-2 hover:bg-(--bg-hover) transition-colors flex items-center gap-2 cursor-pointer ${apiLoading ? "text-text-muted": "text-text-primary"}`}

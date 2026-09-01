@@ -18,6 +18,7 @@ function App() {
             letterSpacing: "-0.01em",
           },
         }}
+        duration={300}
       />
       <RootRouter />
     </AuthContextProvider>

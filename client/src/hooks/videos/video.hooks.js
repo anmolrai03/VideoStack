@@ -1,4 +1,4 @@
-import { useAction } from "../genericHooks/useAction";
+import { useAction } from "../generic/useAction.jsx";
 
 import { deleteUserVideoAPI, getAllVideoAPI, getUserVideoAPI, getVideoStatusAPI, streamVideoAPI, uploadVideoAPI } from "../../apis/videos/video.api.js";
 
@@ -6,7 +6,7 @@ export function useUploadVideo(){
   return useAction(uploadVideoAPI);
 }
 
-export function useGetAllVideo(){
+export function useGetAllVideos() {
   return useAction(getAllVideoAPI);
 }
 

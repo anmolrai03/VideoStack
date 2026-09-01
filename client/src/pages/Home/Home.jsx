@@ -1,41 +1,75 @@
+import { ChevronRight } from "lucide-react";
+import { Link } from "react-router-dom"; // Correct import for Link
+import ActionButton from "../../components/ActionButton/ActionButton";
+import HomeBottom from "./HomeBottom";
+
 function Home() {
   return (
-    <div className="bg-background min-h-screen text-white">
-      <section className="vs-hero">
-        {/* Replace later with your image */}
-        <div
-          className="vs-hero-bg"
-          style={{
-            backgroundImage: "url('/hero-placeholder.png')",
-          }}
-        />
+    <>
+      <div className="bg-[var(--bg-canvas)] min-h-screen text-[var(--text-primary)]">
+        <section className="vs-hero">
+          {/* Hero background image */}
+          <div
+            className="vs-hero-bg"
+            style={{
+              backgroundImage: "url('/hero-placeholder.png')",
+            }}
+          />
 
-        <div className="vs-hero-overlay" />
+          {/* Dark overlay */}
+          <div className="vs-hero-overlay" />
 
-        {/* frame border like reference */}
-        <div className="vs-frame" />
+          {/* Frame border */}
+          <div className="vs-frame" />
 
-        <div className="vs-hero-content">
-          {/* BIG BRAND TEXT */}
-          <h1
-            className="text-[clamp(2rem,10vw,13rem)] leading-[0.9] tracking-[-0.04em] font-light select-none relative z-10 wrap-break-word"
-          >
-            VIDEOSTACK
-          </h1>
+          {/* Hero content */}
+          <div className="vs-hero-content">
+            {/* Brand text */}
+            <h1 className="text-[clamp(2rem,10vw,13rem)] leading-[0.9] tracking-[-0.04em] font-light select-none break-words relative z-10">
+              VIDEOSTACK
+            </h1>
 
-          {/* description */}
-          <div className="max-w-xl mt-10 space-y-6">
-            <p className="text-neutral-300 text-base leading-relaxed">
-              A modern video processing platform built for creators, developers
-              and teams. Upload, process and stream videos seamlessly with
-              scalable infrastructure.
-            </p>
+            {/* Description */}
+            <div className="max-w-xl mt-10 space-y-6">
+              <p className="text-[var(--text-secondary)] text-base leading-relaxed">
+                A modern video processing platform built for creators,
+                developers and teams. Upload, process and stream videos
+                seamlessly with scalable infrastructure.
+              </p>
 
-            <button className="vs-btn">Start Upload →</button>
+              {/* Use ActionButton for consistency */}
+              <Link to="/upload">
+                <ActionButton
+                  buttonName="Start Upload"
+                  icon={<ChevronRight />}
+                  iconPosition="right"
+                />
+              </Link>
+            </div>
+
+            {/* Feed button */}
+            {/* <Link to="/feed">
+              <ActionButton
+                buttonName="Go to Feed"
+                icon={<ChevronRight />}
+                iconPosition="right"
+                cssClass="mt-4" // Add margin if needed
+              />
+            </Link>
+
+            <Link to="/stream">
+              <ActionButton
+                buttonName="Go to Stream"
+                icon={<ChevronRight />}
+                iconPosition="right"
+                cssClass="mt-4" // Add margin if needed
+              />
+            </Link> */}
           </div>
-        </div>
-      </section>
-    </div>
+        </section>
+      </div>
+      <HomeBottom />
+    </>
   );
 }
 
