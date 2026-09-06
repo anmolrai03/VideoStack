@@ -6,7 +6,17 @@ function createRedisConnection() {
 
   const isProduction = (process.env.NODE_ENV?.trim() === PROD_ENV);
 
-  const redisURL = (isProduction ? process.env.REDIS_URL : "redis://127.0.0.1:6379");
+  // In production, use online REDIS_URL (Upstash).
+  // In development, connect to local Redis (127.0.0.1:6379 on host, or redis://redis:6379 in Docker).
+  let redisURL;
+  if (isProduction) {
+    redisURL = process.env.REDIS_URL;
+  } else if (process.env.REDIS_URL && !process.env.REDIS_URL.startsWith("rediss://") && !process.env.REDIS_URL.includes("upstash.io")) {
+    redisURL = process.env.REDIS_URL;
+  } else {
+    redisURL = "redis://127.0.0.1:6379";
+  }
+
   debugLog("url" , redisURL);
   const redisOptions = {
     maxRetriesPerRequest: null, // for letting bullmq handle the retries
@@ -14,8 +24,8 @@ function createRedisConnection() {
     retryStrategy: (times) => Math.min(times * 50, 2000), // controls reconnection tries
   }
 
-  if( isProduction ){
-    redisOptions.tls = {};// required for prodction , using upstash it will always provide  tls
+  if (isProduction || (redisURL && redisURL.startsWith("rediss://"))) {
+    redisOptions.tls = {}; // required for Upstash TLS
   }
 
   const redisConnection = new IORedis(redisURL,redisOptions);

@@ -1,24 +1,24 @@
 FROM node:22.18.0-slim
 
-# installing ffmpeg to the server os
+# Install ffmpeg without unneeded recommended packages
 RUN apt-get update && \
-    apt-get install -y ffmpeg && \
+    apt-get install -y --no-install-recommends ffmpeg && \
     rm -rf /var/lib/apt/lists/*
 
-# specifying a working directory
 WORKDIR /server
 
-# copy the package.json file
+# Copy package manifests for efficient Docker layer caching
 COPY package*.json ./
 
-#run npm install to get all dependencies
-RUN npm install --production
+# Deterministic production-only dependency install
+RUN npm ci --omit=dev
 
-#copy all of the remaining code
+# Copy application source
 COPY . .
 
-#expose port
+# Ensure storage directories exist
+RUN mkdir -p public/data/clientUploads public/data/processed
+
 EXPOSE 3000
 
-# cmd to start when we run the docker container
 CMD [ "node", "server.js" ]

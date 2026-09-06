@@ -1,224 +1,193 @@
 # VideoStack
 
-**A Dockerized, stateless media-processing backend built with Node.js and FFmpeg — handling video/audio conversion, format changes, and resolution scaling through a clean REST API.**
+VideoStack is a Dockerized video-upload and streaming application for clients that need authenticated video uploads, background transcoding, adaptive HLS output, and status tracking. The React client provides the upload and playback experience; the Node.js API persists metadata in MongoDB, uses BullMQ and Redis to schedule work, and runs FFmpeg in a separate worker process before publishing HLS output through Cloudinary.
 
-![Node](https://img.shields.io/badge/Node.js-v22.18.0-339933?logo=node.js&logoColor=white)
-![Express](https://img.shields.io/badge/Express.js-000000?logo=express&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)
-![FFmpeg](https://img.shields.io/badge/FFmpeg-powered-007808?logo=ffmpeg&logoColor=white)
-![Status](https://img.shields.io/badge/status-Phase%201%20complete-brightgreen)
+## Architecture / Pipeline Overview
 
----
+The primary upload pipeline is:
 
-<!-- 
-## Demo
+1. `client/src` sends an authenticated multipart request to `POST /api/videos/upload`.
+2. `server/middlewares/multer.middleware.js` validates the MIME type and stores the upload under `public/data/clientUploads`.
+3. `server/controller/videos.controller.js` validates the media with `server/services/ffmpegServices/validateMedia.js`, creates a MongoDB video record, and adds a `generate-hls-video` job to `server/queues/video.queue.js`.
+4. BullMQ uses Redis from `server/configs/redis.js` as the queue and job-state backend.
+5. `server/workers/video.worker.js` updates the record to `PROCESSING`, builds the HLS FFmpeg arguments, and invokes `server/services/ffmpegServices/ffmpegRunner.js`.
+6. FFmpeg writes the HLS master playlist and variant segments under `public/data/processed/<videoId>`.
+7. The worker uploads the HLS output through `server/services/storageServices/uploadToObjectStorage.js` and the Cloudinary configuration in `server/configs/cloudinary.js`.
+8. The worker stores the resulting playlist URL and changes the MongoDB status to `READY`. Failures update the status to `FAILED` with `failureReason`.
+9. The client requests the playlist URL through `GET /api/videos/stream/:videoId` and plays the HLS stream with `hls.js`.
 
-Replace this with an actual GIF: record a short screen capture of uploading a file,
-     selecting an action (resize/extract-audio/convert-format), and downloading the result.
-     Tools: ScreenToGif (Windows), Kap (Mac), or peek (Linux). Keep it under 10-15 seconds.
-
-![VideoStack demo](docs/demo.gif)
-
-*Upload → select operation → processed file streams back, all in one request.*
-
----
- -->
-
-## Table of Contents
-
-- [Why This Project](#why-this-project)
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Architecture](#architecture)
-- [API Reference](#api-reference)
-- [Getting Started](#getting-started)
-- [Docker Deployment](#docker-deployment)
-- [Performance & Constraints](#performance--constraints)
-- [Security](#security)
-- [Roadmap](#roadmap)
-
----
-
-## Why This Project
-
-Most media-processing demos wrap FFmpeg in a script and call it done. VideoStack is built as an actual **stateless service** — no database, no persistent storage, no shared session state — so it can scale horizontally behind a load balancer with zero coordination between instances. Every request is self-contained: file in, FFmpeg processes it asynchronously, processed file streams out, temp files are cleaned up automatically.
-
-This was a deliberate design choice to mirror how production media pipelines (think transcoding services at YouTube/Netflix scale, just far smaller) separate stateless processing workers from persistent storage layers — which is also why Phase 2 introduces a queue (BullMQ/Redis) to decouple ingestion from processing entirely.
-
-## Features
-
-**Phase 1 (current):**
-- Video upload and processing via a single REST endpoint
-- Resolution scaling — 240p, 360p, 480p, 720p, 1080p
-- Audio extraction — MP3 / AAC
-- Container format conversion — MP4 ↔ MKV
-- Fully stateless REST API — no database dependency
-- Asynchronous FFmpeg execution (non-blocking)
-- Automatic temp file cleanup after every response
-- Production-optimized Docker image
-- Health-check endpoint for orchestration (Kubernetes/Swarm-ready)
+The legacy synchronous conversion endpoint remains available at `POST /api/convert`. It is implemented by `server/controller/videoProcessing.controller.js`, which validates the upload, generates conversion arguments with `argsGenerator.js`, runs FFmpeg, streams the result, and removes temporary files.
 
 ## Tech Stack
 
-| Component | Technology |
-|-----------|-----------|
-| Runtime | Node.js v22.18.0 |
-| Framework | Express.js |
-| Media Processing | FFmpeg |
-| File Upload | Multer |
-| Frontend | React + Vite + Tailwind CSS |
-| Containerization | Docker |
-| Architecture | Stateless REST API |
+### Frontend
 
-## Architecture
+- React 19
+- Vite
+- Tailwind CSS
+- React Router
+- Axios
+- `hls.js`
+- `react-hook-form`
 
-```
-POST /api/convert (video file + action + params)
-        │
-        ▼
-Multer Middleware (validates, stores temp file)
-        │
-        ▼
-Video Processing Controller (parses action & params)
-        │
-        ▼
-FFmpeg Services (generates args based on action, runs FFmpeg)
-        │
-        ▼
-Streams processed file directly to client
-        │
-        ▼
-Cleanup Handler (deletes temp files)
-```
+### Backend
 
-**Project structure:**
+- Node.js
+- Express 5
+- Multer for multipart uploads
+- Mongoose and MongoDB
+- Cookie-based JWT authentication
 
-```
-VideoStack/
-├── client/                          # React frontend (Vite + Tailwind)
-│   ├── src/
-│   ├── public/
-│   └── vite.config.js
-├── server/                          # Express backend (containerized)
-│   ├── controller/
-│   ├── middlewares/
-│   ├── routes/
-│   ├── services/
-│   │   └── ffmpegServices/
-│   │       ├── argsGenerator.js
-│   │       ├── ffmpegRunner.js
-│   │       └── videoPresets.js
-│   ├── utils/
-│   ├── public/data/
-│   │   ├── clientUploads/           # Temporary upload storage
-│   │   └── processed/               # Temporary processed output
-│   ├── Dockerfile
-│   ├── server.js                    # Entry point
-│   └── app.js                       # Express configuration
-└── readme.md
-```
+### Queue and processing
 
-## API Reference
+- BullMQ
+- Redis via ioredis
+- FFmpeg invoked with `child_process.spawn`
+- HLS packaging with multiple video variants
 
-### `POST /api/convert`
+### Storage
 
-**Request** (`multipart/form-data`):
+- MongoDB for users, video metadata, status, and playlist URLs
+- Cloudinary for HLS output when `SKIP_CLOUD_UPLOAD=false`
+- Local shared media volume for upload and processing files
 
-| Field | Type | Values | Notes |
-|---|---|---|---|
-| `file` | file | MP4, MKV, etc. | required |
-| `action` | string | `resize` \| `extract-audio` \| `convert-format` | required |
-| `targetFormat` | string | `mp3` \| `aac` \| `mp4` \| `mkv` | required for `extract-audio` / `convert-format` |
-| `resolution` | string | `240p`…`1080p` | required for `resize` only |
+### Testing
 
-**Response:** processed file, streamed directly for download.
+- Vitest
+- V8 coverage
+- Supertest
+- MongoDB Memory Server
+- Mocked FFmpeg, BullMQ, Redis, Cloudinary, and filesystem boundaries in unit tests
 
-**Example:**
+### Containerization
+
+- Docker
+- Docker Compose
+- `docker-compose.yml` for local MongoDB, Redis, API, and worker services
+- `docker-compose.cloud.yml` for cloud database and Redis deployments
+
+## Setup and Installation
+
+### Prerequisites
+
+- Docker Desktop with Docker Compose
+- Node.js and npm for local client development or test execution
+- An FFmpeg-capable server image is built by `server/Dockerfile`
+
+### Environment configuration
+
+Copy `server/.env.example` to `server/.env` and set the values below:
+
+| Variable | Purpose |
+|---|---|
+| `PORT` | Host port exposed by the API; Compose maps it to container port 3000. |
+| `NODE_ENV` | Selects development or production Redis behavior and runtime settings. |
+| `CORS_ORIGIN` | Allowed browser origin for credentialed requests. |
+| `MONGODB_URL` | MongoDB connection string used by `server/configs/db.js`. |
+| `JWT_SECRET_KEY` | Secret used to sign and verify access-token cookies. |
+| `REDIS_URL` | Redis connection string; use a TLS `rediss://` URL for hosted Redis. |
+| `REDIS_HOST` and `REDIS_PORT` | Optional Redis settings retained for environment configuration. |
+| `SKIP_CLOUD_UPLOAD` | When `true`, the worker uses a simulated playlist URL instead of calling Cloudinary. |
+| `CLOUDINARY_CLOUD_NAME` | Cloudinary cloud name. |
+| `CLOUDINARY_API_KEY` | Cloudinary API key. |
+| `CLOUDINARY_API_SECRET` | Cloudinary API secret. |
+| `CDN_URL` | Optional CDN base URL for deployment configuration. |
+| `MAX_FILE_SIZE_BYTES` | Optional Multer upload limit; defaults to 100 MiB when unset. |
+
+Do not commit `server/.env` or real credentials. The repository includes `server/.env.example` as the configuration template.
+
+### Start with Docker Compose
 
 ```bash
-curl -X POST http://localhost:3000/api/convert \
-  -F "file=@video.mp4" \
-  -F "action=resize" \
-  -F "resolution=720p" \
-  -o output.mp4
+docker compose up --build
 ```
 
-### `GET /health`
+This starts MongoDB, Redis, the API, and the background worker. The API is available at `http://localhost:3000`; the health endpoint is `GET /health`.
 
-Returns service health status for deployment orchestration.
+For local frontend development:
 
-## Getting Started
-
-**Frontend:**
 ```bash
 cd client
 npm install
 npm run dev
 ```
-Runs at `http://localhost:5173`
 
-**Backend:**
+The Vite development server normally runs at `http://localhost:5173`.
+
+To run the backend or worker outside Compose:
+
 ```bash
 cd server
 npm install
 npm run dev
-```
-Runs at `http://localhost:3000`
-
-**Environment variables** (`server/.env`):
-```env
-PORT=3000
-NODE_ENV=development
-CORS_ORIGIN=http://localhost:5173
+npm run dev:workers
 ```
 
-## Docker Deployment
+Run the API and worker as separate processes when using this mode. Redis and MongoDB must be reachable through the configured environment variables.
 
-**Prerequisites:** Docker Engine or Docker Desktop
+## API Endpoints Reference
+
+`POST /api/convert` is unauthenticated. The request is `multipart/form-data` with a `video` file and conversion fields consumed by `argsGenerator.js`: `action` (`video-resize`, `audio-extract`, or `format-convert`), `targetFormat`, and `resolution` for resize operations.
+
+All routes under `/api/videos` are protected by `auth.middleware.js` because `app.js` mounts the route with `authMiddleware`.
+
+| Method | Route | Auth | Purpose |
+|---|---|---|---|
+| `POST` | `/api/videos/upload` | Required | Validate and queue a video upload. Multipart field: `video`; body fields: `title`, optional `description`. Returns `202` when queued. |
+| `GET` | `/api/videos/` | Required | Return the public `READY` video feed. |
+| `GET` | `/api/videos/stream/:videoId` | Required | Return the stored HLS playlist URL for a ready video. |
+| `GET` | `/api/videos/user` | Required | Return the authenticated user's videos; optional `status` query filter. |
+| `DELETE` | `/api/videos/user/delete/:videoId` | Required | Delete an owned video record. |
+| `GET` | `/api/videos/user/status/:videoId` | Required | Return status, metadata, thumbnail, and failure reason for an owned video. |
+| `POST` | `/api/auth/login` | Public | Authenticate with email and password and set the `accessToken` cookie. |
+| `POST` | `/api/auth/register` | Public | Register a user. |
+| `GET` | `/api/auth/logout` | Required | Clear the access-token cookie. |
+| `POST` | `/api/auth/verify-password` | Required | Verify the authenticated user's password. |
+| `GET` | `/api/auth/me` | Required | Return authenticated user details. |
+| `GET` | `/health` | Public | Report Redis and MongoDB connectivity. |
+
+## Testing
+
+From the `server` directory, run:
 
 ```bash
-# Build
-cd server
-docker build -t videostack-server:1.0 .
-
-# Run
-docker run -d \
-  --name videostack-server \
-  --env-file .env \
-  -p 3000:3000 \
-  videostack-server:1.0
-
-# Verify
-docker ps
-docker logs videostack-server
-curl http://localhost:3000/health
+npx vitest run --coverage
 ```
 
-Image is built with a `.dockerignore` to keep the production image lean, and runs statelessly — environment variables injected at runtime, no volumes required for operation.
+The current run passes 87 tests in 11 test files. Overall coverage is 70.43% statements and 71.12% lines. The detailed file-by-file report is available in [docs/TEST_COVERAGE.md](docs/TEST_COVERAGE.md). The suite uses mocks and in-memory test boundaries, so it does not require external MongoDB, Redis, Cloudinary, or FFmpeg services.
 
-## Performance & Constraints
+## Performance Testing
 
-| Operation | Processing Time | File Size Limit |
-|-----------|-----------------|-----------------|
-| Audio Extraction | 5–30s | 10MB max |
-| Video Resize | 30–120s | 10MB max |
-| Format Conversion | 5–20s | 10MB max |
+The archived k6 results measure API resilience for authenticated upload requests. They are not a benchmark of completed FFmpeg throughput because the worker is asynchronous and the tests measure the HTTP enqueue response.
 
-Upload size is capped at **10MB**, enforced by Multer.
+The archived result files and reproducible k6 scripts are available in the [`/benchmarks`](benchmarks/) directory.
 
-## Security
+### API resilience
 
-- Input validation on all uploads
-- Temporary files auto-deleted after every response — no orphaned data on disk
+| Test | Load | Iterations | Failed requests | Average latency | p95 latency | Maximum latency |
+|---|---:|---:|---:|---:|---:|---:|
+| Small load | 5 VUs for 60 seconds | 107 | 0.00% | 237.96 ms | 639.21 ms | 1.71 s |
+| Staircase stress | Up to 75 VUs for 3 minutes | 4,318 | 0.00% | 487.43 ms | 1.32 s | 2.13 s |
 
-## Roadmap
+### Worker throughput configuration
 
-- [ ] Async job queue with BullMQ + Redis (decouple upload from processing)
-- [ ] HLS packaging for adaptive streaming
-- [ ] Object storage + CDN delivery integration
-- [ ] Vitest/Supertest test coverage for FFmpeg service layer
-- [ ] Raise upload size limit via chunked/resumable uploads
+| Component | Current configuration | Interpretation |
+|---|---|---|
+| BullMQ queue | `video-hls-store-processing` | Redis-backed job queue used by the API and worker. |
+| Worker concurrency | `1` | One HLS FFmpeg job is processed at a time per worker process. |
+| Measured completed-job throughput | Not captured by the archived k6 reports | The available tests record enqueue-response performance, not worker completion time. |
 
----
+### Scaling limitation
 
-**Author:** Anmol Rai — [GitHub](https://github.com/anmolrai03) · [LinkedIn](https://linkedin.com/in/anmol-rai-4203b6285)
+The API and worker use the same local `public/data` paths. Docker Compose provides a shared volume for one deployment, but multiple hosts require shared durable storage or an object-storage staging design. Without that change, a worker on another host may not be able to read the uploaded input or the generated HLS files. Redis and MongoDB are shared services, but they do not solve local filesystem visibility.
+
+## Known Limitations / Roadmap
+
+- Worker concurrency is fixed at `1` per worker process; completion throughput needs a dedicated end-to-end benchmark.
+- Shared local media storage limits multi-host horizontal scaling.
+- Cloudinary upload is optional in local and load-test configurations; production deployments must configure credentials and validate the resulting CDN behavior.
+- There is no CI/CD pipeline in the repository.
+- There is no production deployment manifest or infrastructure-as-code configuration in the repository.
+- The synchronous `/api/convert` endpoint remains separate from the queued HLS upload flow.
+- HLS output and temporary files require an explicit retention and cleanup policy for production use.
+

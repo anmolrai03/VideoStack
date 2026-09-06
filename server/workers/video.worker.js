@@ -9,6 +9,7 @@ import Video from "../models/videos.model.js";
 import ffmpegRunner from "../services/ffmpegServices/ffmpegRunner.js";
 import { uploadToCloudinary } from "../services/storageServices/uploadToObjectStorage.js";
 
+import videoQueue from "../queues/video.queue.js";
 import debugLog from "../utils/debugLog.js";
 import cleanUpFiles from "../utils/cleanUpHandler.js";
 
@@ -158,13 +159,27 @@ const worker = new Worker(
       // SAVE THE PLAYLIST TO B2
       // await uploadToCloudinary(outputFilePath, videoId)
 
-      debugLog("upload to cloudinary");
-      // SAVE THE PLAYLIST TO CLOUDINARY AND GET THE STREAMURL FROM THE B2's CDN
-      const streamPlaylistUrl = await uploadToCloudinary(
-        outputFilePath,
-        videoId,
-      );
-      debugLog("upload to cloudinary finished");
+      let streamPlaylistUrl;
+      if (process.env.SKIP_CLOUD_UPLOAD === "true") {
+        console.log(
+          `[SKIP_CLOUD_UPLOAD] Simulating Cloudinary upload for job ${job.id} (videoId: ${videoId})`
+        );
+        // Simulate realistic network upload delay (~1.2s)
+        await new Promise((resolve) => setTimeout(resolve, 1200));
+        const mockCloudinaryResponse = {
+          secure_url: `https://res.cloudinary.com/simulated/raw/upload/videostack/${videoId}/master.m3u8`,
+          public_id: `videostack/${videoId}/master.m3u8`,
+        };
+        streamPlaylistUrl = mockCloudinaryResponse.secure_url;
+      } else {
+        debugLog("upload to cloudinary");
+        // SAVE THE PLAYLIST TO CLOUDINARY AND GET THE STREAMURL FROM THE B2's CDN
+        streamPlaylistUrl = await uploadToCloudinary(
+          outputFilePath,
+          videoId,
+        );
+        debugLog("upload to cloudinary finished");
+      }
 
       debugLog("updating to ready");
       // SAVE STATUS OF THE VIDEO TO READY AND STREAMURL FROM ABOVE IN THE DB
@@ -177,22 +192,23 @@ const worker = new Worker(
       // CONSOLE LOG, PROCCESS WITH ID THIS FINISHED.
       debugLog(`Video ${videoId} processing completed`);
     } catch (error) {
-
       try {
         debugLog("update db to fail");
-        // SAVE FAILED STATE TO DB
-        await Video.findByIdAndUpdate(videoId, { status: "FAILED" });
+        // SAVE FAILED STATE AND REASON TO DB
+        await Video.findByIdAndUpdate(videoId, {
+          status: "FAILED",
+          failureReason: error.message || "Video processing failed",
+        });
         debugLog("update db to fail finished");
       } catch (dbError) {
-        console.log("DB error in video-worker", dbError);
+        console.error("DB error updating video status to FAILED:", dbError);
       }
 
-      console.log(`Processing error for videoId: ${videoId}: ${error.message}`);
-
+      console.error(`Processing error for videoId ${videoId}:`, error.message);
       throw error;
     } finally {
-      //CLEAR THE INPUT AND OUTPUT FILE PATHS
-      cleanUpFiles(inputFilePath, outputFilePath);
+      // CLEAR THE INPUT AND OUTPUT FILE PATHS SAFELY
+      await cleanUpFiles(inputFilePath, outputFilePath);
     }
   },
   {
@@ -201,10 +217,38 @@ const worker = new Worker(
   },
 );
 
+const jobTimings = new Map();
+
+worker.on("active", async (job) => {
+  jobTimings.set(job.id, Date.now());
+  const depth = await videoQueue.count();
+  console.log(`[METRIC] job=${job.id} event=active queueDepth=${depth}`);
+});
+
 worker.on("completed", (job) => {
-  console.log(`Job with id: ${job.id} done.`);
+  const start = jobTimings.get(job.id);
+  const duration = start ? Date.now() - start : null;
+  console.log(`[METRIC] job=${job.id} event=completed durationMs=${duration}`);
+  jobTimings.delete(job.id);
+  console.log(`Job with id: ${job.id} completed successfully.`);
+});
+
+worker.on("failed", async (job, err) => {
+  console.log(`[METRIC] job=${job?.id} event=failed reason=${err?.message}`);
+  console.error(`[BullMQ Job FAILED]: Job with id ${job?.id} failed permanently with error:`, err?.message);
+  if (job?.data?.videoId) {
+    try {
+      await Video.findByIdAndUpdate(job.data.videoId, {
+        status: "FAILED",
+        failureReason: err?.message || "Processing failed after maximum retry attempts.",
+      });
+      console.log(`[BullMQ Job FAILED]: Updated video ${job.data.videoId} to status FAILED in database.`);
+    } catch (dbErr) {
+      console.error(`[BullMQ Job FAILED]: Failed to update database for video ${job.data.videoId}:`, dbErr.message);
+    }
+  }
 });
 
 worker.on("error", async (err) => {
-  console.log("Error occured", err);
+  console.error("Worker error occurred:", err);
 });

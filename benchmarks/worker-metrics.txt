@@ -1,0 +1,5 @@
+Run 1 (28 jobs sampled):
+Min durationMs: 4237, Max durationMs: 15364, Avg durationMs: 7534.04, Peak queueDepth: 1028
+
+Run 2 (167 jobs sampled):
+Min durationMs: 3578, Max durationMs: 15495, Avg durationMs: 4965.23, Peak queueDepth: 4328

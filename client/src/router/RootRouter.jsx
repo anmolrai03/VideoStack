@@ -19,6 +19,7 @@ const Upload = lazy(() => import("../pages/Upload/Upload"));
 const VideoPlayer = lazy(() => import("../pages/VideoPlayer/VideoPlayer"));
 const Settings = lazy(() => import("../pages/Settings/Settings"));
 const Test = lazy(() => import("../pages/Test"));
+const NotFound = lazy(() => import("../pages/NotFound/NotFound"));
 
 // Loading component
 import Loading from "../pages/Loading/Loading";
@@ -140,6 +141,15 @@ function RootRouter() {
         </Route>
         {/* PROTECTED ROUTES ENDS HERE */}
 
+        {/* CATCH-ALL 404 ROUTE */}
+        <Route
+          path="*"
+          element={
+            <Suspense fallback={<Loading />}>
+              <NotFound />
+            </Suspense>
+          }
+        />
       </>,
     ),
   );

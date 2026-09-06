@@ -5,5 +5,18 @@ export default defineConfig({
     environment: "node",
     globals: true,
     include: ["tests/**/*.test.js"],
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "json-summary"],
+      include: [
+        "controller/**/*.js",
+        "middlewares/**/*.js",
+        "services/**/*.js",
+        "utils/**/*.js",
+        "workers/**/*.js",
+        "app.js"
+      ],
+      exclude: ["tests/**", "node_modules/**"],
+    },
   },
 });

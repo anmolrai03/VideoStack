@@ -8,16 +8,12 @@
   "main": "server.js",
   "scripts": {
     "test": "vitest",
-
     "dev": "nodemon server.js",
     "dev:workers": "nodemon workers/index.js",
-
     "start": "node server.js",
     "start:workers": "node workers/index.js",
-
     "redis:start": "docker start redis-dev || docker run -d -p 6379:6379 --name redis-dev redis:7",
     "redis:stop": "docker stop redis-dev",
-    
     "dev:all": "npm run redis:start && concurrently -k --names \"SERVER,WORKER\" --prefix-colors \"red,yellow\" \"npm run dev\" \"npm run dev:workers\""
   },
   "dependencies": {
@@ -35,6 +31,7 @@
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
+    "@vitest/coverage-v8": "^4.1.11",
     "concurrently": "^9.2.1",
     "mongodb-memory-server": "^11.0.1",
     "nodemon": "^3.1.11",

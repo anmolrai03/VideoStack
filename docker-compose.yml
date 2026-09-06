@@ -1,0 +1,95 @@
+services:
+  # -----------------------------------------------------------
+  # 1. LOCAL DATABASE: MongoDB
+  # -----------------------------------------------------------
+  mongo:
+    image: mongo:7
+    container_name: videostack-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # -----------------------------------------------------------
+  # 2. LOCAL CACHE / QUEUE BROKER: Redis
+  # -----------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: videostack-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # -----------------------------------------------------------
+  # 3. BACKEND API: Express Server
+  # -----------------------------------------------------------
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: videostack-server
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    env_file:
+      - ./server/.env
+    environment:
+      - PORT=3000
+      - NODE_ENV=development
+      - MONGODB_URL=mongodb://mongo:27017/videostack
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      # Shared media volume: uploaded input files & transcoded HLS chunks
+      - shared-media:/server/public/data
+
+  # -----------------------------------------------------------
+  # 4. BACKGROUND WORKER: FFmpeg & BullMQ Transcoder
+  # -----------------------------------------------------------
+  worker:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    # container_name: videostack-worker
+    restart: unless-stopped
+    command: ["node", "workers/index.js"]
+    env_file:
+      - ./server/.env
+    environment:
+      - NODE_ENV=development
+      - MONGODB_URL=mongodb://mongo:27017/videostack
+      - REDIS_URL=redis://redis:6379
+      - SKIP_CLOUD_UPLOAD=${SKIP_CLOUD_UPLOAD:-true}
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      # Shared media volume: must match server so worker can find and transcode uploads
+      - shared-media:/server/public/data
+
+volumes:
+  mongo-data:
+    driver: local
+  redis-data:
+    driver: local
+  shared-media:
+    driver: local

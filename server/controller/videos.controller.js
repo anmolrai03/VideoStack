@@ -2,18 +2,18 @@ import Video from "../models/videos.model.js";
 
 import AppError from "../utils/AppError.js";
 import { successResponse } from "../utils/responseHandler.js";
-
 import { statusCodes } from "../constants/statusCodes.js";
 
 import videoQueue from "../queues/video.queue.js";
 import debugLog from "../utils/debugLog.js";
+import validateVideoFile from "../services/ffmpegServices/validateMedia.js";
+import cleanUpFiles from "../utils/cleanUpHandler.js";
 
 const uploadVideoController = async (req, res, next) => {
-  try {
-    //GET VIDEO FILE
-    const videoData = req.file;
+  const videoData = req.file;
 
-    //VALIDATE VIDEO FILE
+  try {
+    // 1. VALIDATE VIDEO FILE PRESENCE
     if (!videoData) {
       throw new AppError({
         statusCode: statusCodes.BAD_REQUEST,
@@ -22,11 +22,10 @@ const uploadVideoController = async (req, res, next) => {
       });
     }
 
-    // GET TITLE AND DESCRIPTION
+    // 2. VALIDATE TITLE
     const { title, description } = req.body;
-
-    //VALIDATE TITLE
     if (!title || title.trim() === "") {
+      await cleanUpFiles(videoData.path);
       throw new AppError({
         statusCode: statusCodes.BAD_REQUEST,
         code: "TITLE_REQUIRED",
@@ -34,32 +33,59 @@ const uploadVideoController = async (req, res, next) => {
       });
     }
 
-    //CREATE VIDEO INSTANCE IN DATABASE
+    // 3. EARLY CORRUPT / FAKE VIDEO VALIDATION (Pre-pipeline check)
+    const probeResult = await validateVideoFile(videoData.path);
+    if (!probeResult.isValid) {
+      await cleanUpFiles(videoData.path);
+      throw new AppError({
+        statusCode: statusCodes.BAD_REQUEST,
+        code: "CORRUPTED_OR_INVALID_VIDEO",
+        message: probeResult.error || "The uploaded file is corrupted or not a valid video.",
+        errors: [{ field: "video", message: probeResult.error || "Media validation failed" }],
+      });
+    }
+
+    // 4. CREATE VIDEO RECORD IN DATABASE
     const video = new Video({
-      title,
-      description,
+      title: title.trim(),
+      description: description?.trim() || "",
       owner: req.clientData.userId,
       status: "QUEUED",
     });
 
-    //SAVE TO DB
     await video.save();
 
-    debugLog("sending to worker que");
+    // 5. ATTEMPT QUEUE SUBMISSION (Safely handle Redis downtime)
+    try {
+      debugLog("sending to worker queue");
+      await videoQueue.add("generate-hls-video", {
+        videoId: video._id,
+        inputFilePath: videoData.path,
+      });
+      debugLog("sent to queue successfully");
+    } catch (queueError) {
+      console.error("[QUEUE ERROR]: Redis/BullMQ is unreachable:", queueError.message);
+      // Clean up orphaned document and uploaded file
+      await cleanUpFiles(videoData.path);
+      await Video.findByIdAndDelete(video._id);
 
-    // CALL BACKGROUDN PROCESS BULLMQ TO HANDLE TASKS
-    await videoQueue.add("generate-hls-video", {
-      videoId: video._id,
-      inputFilePath: videoData.path,
-    });
-    debugLog("sent");
+      throw new AppError({
+        statusCode: statusCodes.SERVICE_UNAVAILABLE,
+        code: "QUEUE_SERVICE_UNAVAILABLE",
+        message: "Video processing queue is temporarily unavailable. Please try again in a few moments.",
+      });
+    }
 
-    // RETURN RESPONSE
+    // 6. RETURN RESPONSE
     return successResponse(
       res,
       statusCodes.ACCEPTED,
       "VIDEO_UPLOAD_ACCEPTED",
-      "Video upload accepted.",
+      "Video upload accepted and queued for processing.",
+      {
+        videoId: video._id,
+        title: video.title,
+      },
     );
   } catch (error) {
     next(error);
@@ -79,7 +105,7 @@ const getUserVideosController = async (req, res, next) => {
     debugLog("filters", filters);
 
     const videos = await Video.find(filters)
-      .select("title description thumbnail createdAt status")
+      .select("title description thumbnail createdAt status failureReason")
       .sort({ createdAt: -1 })
       .lean();
 
@@ -108,7 +134,7 @@ const deleteVideoController = async (req, res, next) => {
     const { videoId } = req.params;
     const { userId } = req.clientData;
 
-    if (!videoId || videoId.trim()) {
+    if (!videoId || videoId.trim() === "") {
       throw new AppError({
         statusCode: statusCodes.BAD_REQUEST,
         code: "VIDEO_ID_MISSING",
@@ -155,7 +181,7 @@ const getVideoStatusController = async (req, res, next) => {
     }
 
     const video = await Video.findOne({ _id: videoId })
-      .select("status owner")
+      .select("status owner failureReason title description thumbnail")
       .lean();
 
     if (!video) {
@@ -179,7 +205,13 @@ const getVideoStatusController = async (req, res, next) => {
       statusCodes.OK,
       "STATUS_SENT",
       "Status fetched successfully.",
-      { status: video.status },
+      {
+        status: video.status,
+        failureReason: video.failureReason,
+        title: video.title,
+        description: video.description,
+        thumbnail: video.thumbnail,
+      },
     );
   } catch (error) {
     next(error);

@@ -12,3 +12,5 @@ npm-debug.log
 .git*
 public/data/clientUploads/*
 public/data/processed/*
+
+tests/

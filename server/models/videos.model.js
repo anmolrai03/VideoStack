@@ -33,7 +33,12 @@ const VideoSchema = new mongoose.Schema(
       type: String,
       enum: ["QUEUED", "PROCESSING", "READY", "FAILED"],
       default: "QUEUED",
-    }
+    },
+
+    failureReason: {
+      type: String,
+      trim: true,
+    },
 
   }, {timestamps: true}
 )

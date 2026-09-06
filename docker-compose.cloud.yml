@@ -1,0 +1,35 @@
+services:
+  # -----------------------------------------------------------
+  # BACKEND API: Express Server (Cloud DB & Cloud Redis)
+  # -----------------------------------------------------------
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: videostack-server
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    env_file:
+      - ./server/.env
+    volumes:
+      - shared-media:/server/public/data
+
+  # -----------------------------------------------------------
+  # BACKGROUND WORKER: FFmpeg & BullMQ Transcoder
+  # -----------------------------------------------------------
+  worker:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: videostack-worker
+    restart: unless-stopped
+    command: ["node", "workers/index.js"]
+    env_file:
+      - ./server/.env
+    volumes:
+      - shared-media:/server/public/data
+
+volumes:
+  shared-media:
+    driver: local

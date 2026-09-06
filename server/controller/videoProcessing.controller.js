@@ -5,6 +5,7 @@ import { errorResponse } from "../utils/responseHandler.js";
 import argsGenerator from "../services/ffmpegServices/argsGenerator.js";
 import ffmpegRunner from "../services/ffmpegServices/ffmpegRunner.js";
 import cleanUpFiles from "../utils/cleanUpHandler.js";
+import validateVideoFile from "../services/ffmpegServices/validateMedia.js";
 
 const processVideo = async (req, res) => {
   const videoData = req.file;
@@ -17,14 +18,16 @@ const processVideo = async (req, res) => {
 
   const inputPath = videoData.path;
 
-  if (!videoData.mimetype.startsWith("video/")) {
-    cleanUpFiles(inputPath);
+  // Validate corrupt or invalid container early
+  const probeResult = await validateVideoFile(inputPath);
+  if (!probeResult.isValid) {
+    await cleanUpFiles(inputPath);
     return errorResponse(
       res,
-      415,
-      "UNSUPPORTED_MEDIA_TYPE",
-      "only video files required",
-      [{ field: "video", message: "Select Video files only." }],
+      400,
+      "CORRUPTED_OR_INVALID_VIDEO",
+      probeResult.error || "The uploaded file is corrupt or not a valid playable video.",
+      [{ field: "video", message: probeResult.error || "Invalid video file" }],
     );
   }
 
@@ -49,23 +52,22 @@ const processVideo = async (req, res) => {
     outputPath = generatorResponse.outputFilePath;
 
     await ffmpegRunner(generatorResponse.args);
-    res.download(outputPath, (err) => {
+    res.download(outputPath, async (err) => {
       if (err) {
         console.error("Download error: ", err);
       }
-      cleanUpFiles(inputPath, outputPath);
+      await cleanUpFiles(inputPath, outputPath);
     });
   } catch (error) {
-    cleanUpFiles(inputPath, outputPath);
+    await cleanUpFiles(inputPath, outputPath);
 
     // This is AppError
     if (error instanceof Error && error.statusCode && error.code) {
-      console.log("App Error Generated traces: ", error)
-      return errorResponse(res, error.statusCode, error.code, error.message);
+      return errorResponse(res, error.statusCode, error.code, error.message, error.errors || []);
     }
 
     // Unknown / unexpected error
-    console.error("UNHANDLED ERROR:", error);
+    console.error("UNHANDLED ERROR in processVideo:", error);
 
     return errorResponse(
       res,
